@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
-export default function LoginPage() {
+export default function ProfilePage() {
   const [, setLocation] = useLocation();
-  useEffect(() => { setLocation("/"); }, []);
+  useEffect(() => { setLocation("/dashboard"); }, []);
   return null;
 }
