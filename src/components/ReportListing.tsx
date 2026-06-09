@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Flag, X, CheckCircle } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { authedClient } from "@/lib/supabase";
 import { getOrCreateIdentity } from "@/lib/identity";
 
 const REASONS = [
@@ -30,7 +30,7 @@ export default function ReportListing({ listingId, listingTitle }: ReportListing
     setLoading(true);
     try {
       const identity = await getOrCreateIdentity();
-      await supabase.from("reports").insert({
+      await authedClient(identity.token).from("reports").insert({
         listing_id:     listingId,
         reporter_token: identity.token,
         reason,

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Star, Zap, CheckCircle, X, TrendingUp, Eye } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { authedClient } from "@/lib/supabase";
 import { getOrCreateIdentity } from "@/lib/identity";
 
 const PLANS = [
@@ -47,7 +47,7 @@ export default function PremiumUpgrade({ listingId, listingTitle, onClose }: Pre
       const expiresAt = new Date();
       expiresAt.setMonth(expiresAt.getMonth() + (plan === "quarterly" ? 3 : 1));
 
-      await supabase.from("premium_listings").insert({
+      await authedClient(identity.token).from("premium_listings").insert({
         listing_id:     listingId,
         operator_token: identity.token,
         plan,

@@ -4,7 +4,7 @@ import {
   Phone, MessageCircle, AlertTriangle, ChevronRight,
   User, Banknote, Star
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase, authedClient } from "@/lib/supabase";
 import SOSOverlay from "./SOSOverlay";
 
 // ─── Booking State Machine ────────────────────────────────────────────────────
@@ -47,7 +47,7 @@ function QuickRating({ bookingId, listingId, reviewerToken, onDone }: {
     if (!rating) return;
     setSubmitting(true);
     try {
-      await supabase.from("reviews").upsert({
+      await authedClient(reviewerToken).from("reviews").upsert({
         listing_id: listingId,
         booking_id: bookingId,
         reviewer_token: reviewerToken,
@@ -386,7 +386,7 @@ export default function BookingTracker({ booking, onClose, onStatusChange }: Boo
                     </button>
                     <button
                       onClick={async () => {
-                        await supabase
+                        await authedClient(booking.booker_token)
                           .from("bookings")
                           .update({ status: "cancelled" })
                           .eq("id", booking.id)
