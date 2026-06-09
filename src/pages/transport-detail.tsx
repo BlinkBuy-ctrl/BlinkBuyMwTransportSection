@@ -53,17 +53,22 @@ export default function TransportDetailPage() {
     if (!id) return;
     let mounted = true;
     (async () => {
-      const [{ data: lData }, { data: rData }] = await Promise.all([
-        supabase.from("listings").select("*").eq("id", id).single(),
-        supabase.from("reviews").select("*").eq("listing_id", id).order("created_at", { ascending:false }),
-      ]);
-      if (mounted) {
+      try {
+        const [{ data: lData, error: lErr }, { data: rData }] = await Promise.all([
+          supabase.from("listings").select("*").eq("id", id).maybeSingle(),
+          supabase.from("reviews").select("*").eq("listing_id", id).order("created_at", { ascending:false }),
+        ]);
+        if (!mounted) return;
+        if (lErr) console.error("[TransportMW] listing fetch error:", lErr.message);
         setListing(lData ?? null);
         setReviews(rData ?? []);
         setIsOwner(isListingOwner(lData?.operator_token));
         if (lData) supabase.rpc("increment_listing_views", { p_listing_id: id }).catch(()=>{});
+      } catch (e) {
+        console.error("[TransportMW] detail page error:", e);
+      } finally {
+        if (mounted) setLoading(false);
       }
-      if (mounted) setLoading(false);
     })();
     return () => { mounted = false; };
   }, [id]);
