@@ -5,7 +5,7 @@ import {
   ArrowLeft, Shield, Car, Calendar, Banknote,
   Zap, Users, Trash2, Edit3, AlertTriangle, Share2
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase, authedClient } from "@/lib/supabase";
 import { getOrCreateIdentity, isListingOwner } from "@/lib/identity";
 import BookingTracker, { type BookingInfo, type BookingStatus } from "@/components/BookingTracker";
 import SOSOverlay from "@/components/SOSOverlay";
@@ -71,7 +71,7 @@ export default function TransportDetailPage() {
   const handleDelete = async () => {
     setDeleting(true);
     const identity = await getOrCreateIdentity();
-    await supabase.from("listings").update({ status:"deleted" })
+    await authedClient(identity.token).from("listings").update({ status:"deleted" })
       .eq("id", listing.id).eq("operator_token", identity.token);
     window.location.href = "/dashboard";
   };
@@ -82,7 +82,7 @@ export default function TransportDetailPage() {
     setBookingLoading(true);
     try {
       const identity = await getOrCreateIdentity();
-      const { data, error } = await supabase.from("bookings").insert({
+      const { data, error } = await authedClient(identity.token).from("bookings").insert({
         listing_id: listing.id, booker_token: identity.token,
         booker_name: booking.name || "Anonymous", booker_phone: booking.phone || null,
         from_location: booking.from, to_location: booking.to,

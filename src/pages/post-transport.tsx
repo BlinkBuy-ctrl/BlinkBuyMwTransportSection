@@ -4,7 +4,7 @@ import {
   Car, MapPin, Banknote, Tag, Zap, ChevronDown,
   CheckCircle, Shield, Eye, EyeOff
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabaseConfigured, authedClient } from "@/lib/supabase";
 import { getOrCreateIdentity } from "@/lib/identity";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -80,6 +80,16 @@ export default function PostTransportPage() {
   const submit = async () => {
     setLoading(true); setError("");
     try {
+      // Guard: env vars missing / stale build — show clear message before DB call
+      if (!supabaseConfigured) {
+        throw new Error(
+          "App is not connected to the database.\n" +
+          "If you are the developer: set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY " +
+          "in your Vercel / Netlify environment variables, then redeploy. " +
+          "Vite bakes these values at build time — saving the vars is not enough; " +
+          "you must trigger a new build."
+        );
+      }
       const identity = await getOrCreateIdentity();
       const allTags  = [form.vehicleType, ...form.tags].filter(Boolean);
       const title    = form.title || `${form.vehicleType} – ${form.fromCity} to ${form.toCity}`;
@@ -106,7 +116,8 @@ export default function PostTransportPage() {
         status:         "active",
       };
 
-      const { data, error: err } = await supabase
+      const client = authedClient(identity.token);
+      const { data, error: err } = await client
         .from("listings")
         .insert([payload])
         .select("id")

@@ -5,7 +5,7 @@ import {
   ToggleRight, MapPin, Banknote, Shield, Clock, ChevronRight,
   AlertTriangle, MessageCircle, RefreshCw
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase, authedClient } from "@/lib/supabase";
 import { getOrCreateIdentity } from "@/lib/identity";
 import PremiumUpgrade from "@/components/PremiumUpgrade";
 import FareEstimator from "@/components/FareEstimator";
@@ -60,7 +60,8 @@ export default function DashboardPage() {
   const loadListings = async (token: string) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const client = authedClient(token);
+      const { data, error } = await client
         .from("listings")
         .select("*")
         .eq("operator_token", token)
@@ -84,7 +85,7 @@ export default function DashboardPage() {
     setTogglingId(listing.id);
     try {
       const newVal = !listing.is_online;
-      await supabase.from("listings")
+      await authedClient(identityToken!).from("listings")
         .update({ is_online: newVal })
         .eq("id", listing.id)
         .eq("operator_token", identityToken!);
@@ -96,7 +97,7 @@ export default function DashboardPage() {
   const deleteListing = async (id: string) => {
     setDeletingId(id);
     try {
-      await supabase.from("listings")
+      await authedClient(identityToken!).from("listings")
         .update({ status: "deleted" })
         .eq("id", id)
         .eq("operator_token", identityToken!);

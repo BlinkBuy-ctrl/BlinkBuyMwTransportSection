@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Bell, Zap, CheckCircle, Calendar, Star, Info } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase, authedClient } from "@/lib/supabase";
 import { getOrCreateIdentity } from "@/lib/identity";
 
 interface Notif {
@@ -48,7 +48,8 @@ export default function NotificationsPage() {
 
   const markRead = async (id: string) => {
     setNotifs(prev => prev.map(n => n.id === id ? {...n, read: true} : n));
-    await supabase.from("operator_notifications").update({ read: true }).eq("id", id);
+    if (!identity?.token) return;
+    await authedClient(identity.token).from("operator_notifications").update({ read: true }).eq("id", id);
   };
 
   const unread = notifs.filter(n => !n.read).length;
