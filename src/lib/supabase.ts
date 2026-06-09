@@ -1,26 +1,64 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl     = import.meta.env.VITE_SUPABASE_URL     as string
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
+const supabaseUrl     = import.meta.env.VITE_SUPABASE_URL     as string | undefined
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('[BlinkBuy] Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY — check your Netlify/Vercel environment variables.')
+const missingUrl = !supabaseUrl  || supabaseUrl  === 'undefined' || supabaseUrl.includes('your-project')
+const missingKey = !supabaseAnonKey || supabaseAnonKey === 'undefined' || supabaseAnonKey.includes('your-supabase')
+
+if (missingUrl || missingKey) {
+  console.error(
+    '[TransportMW] Supabase env vars missing or are still placeholder values.\n' +
+    '  VITE_SUPABASE_URL      = ' + (supabaseUrl  ?? '(not set)') + '\n' +
+    '  VITE_SUPABASE_ANON_KEY = ' + (supabaseAnonKey ? supabaseAnonKey.slice(0, 20) + '…' : '(not set)') + '\n\n' +
+    '  Fix: set both in Vercel/Netlify → Environment Variables, then REDEPLOY.\n' +
+    '  Vite bakes vars at build time — saving vars without rebuilding does nothing.'
+  )
 }
 
-// Guard: createClient with placeholder values so the module doesn't throw
-// during parse when env vars are absent (causes blank screen).
+export const supabaseConfigured = !missingUrl && !missingKey
+
+// Base client — used for all public reads (listings, reviews, etc.)
 export const supabase = createClient(
-  supabaseUrl  || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-key',
+  missingUrl  ? 'https://placeholder.supabase.co' : supabaseUrl!,
+  missingKey  ? 'eyJplaceholder' : supabaseAnonKey!,
   {
     auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      storageKey: 'transport_auth_token',
-      // Use a safe accessor — window is undefined during SSR/prerender
-      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+      persistSession:     false,
+      autoRefreshToken:   false,
+      detectSessionInUrl: false,
     },
-    global: { headers: { 'X-Client-Info': 'transport-standalone' } },
+    global: {
+      headers: { 'X-Client-Info': 'transportmw/1.0' },
+    },
   }
 )
+
+/**
+ * Returns a Supabase client that injects x-operator-token into every request.
+ * Use this for any operation that depends on RLS (insert, update, delete,
+ * or reading the operator's own private listings / notifications / bookings).
+ *
+ * Usage:
+ *   const client = authedClient(identity.token)
+ *   await client.from('listings').insert(payload)
+ */
+export function authedClient(operatorToken: string) {
+  return createClient(
+    missingUrl  ? 'https://placeholder.supabase.co' : supabaseUrl!,
+    missingKey  ? 'eyJplaceholder' : supabaseAnonKey!,
+    {
+      auth: {
+        persistSession:     false,
+        autoRefreshToken:   false,
+        detectSessionInUrl: false,
+      },
+      global: {
+        headers: {
+          'X-Client-Info':    'transportmw/1.0',
+          'x-operator-token': operatorToken,
+        },
+      },
+    }
+  )
+}
