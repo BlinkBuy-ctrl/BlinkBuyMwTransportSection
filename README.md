@@ -1,4 +1,4 @@
-# TransportMW — Malawi's Ride Hub
+# TransportMW — Malawi's Ride Hub Peter Mlandula
 
 Production-ready transport booking platform for Malawi. No user accounts required — anonymous identity system via device tokens.
 
