@@ -73,7 +73,7 @@ export default function NotificationsPage() {
                 .eq("operator_token", identity.token)
                 .eq("read", false);
             }}
-            className="text-xs text-orange-600 font-bold hover:underline"
+            className="text-xs text-teal-600 font-bold hover:underline"
           >
             Mark all read
           </button>
@@ -98,8 +98,8 @@ export default function NotificationsPage() {
             return (
               <div key={n.id}
                 onClick={() => { markRead(n.id); if (n.link) window.location.href = n.link; }}
-                className={`flex items-start gap-3 p-3.5 rounded-xl border transition-all cursor-pointer hover:border-orange-400/50 active:scale-[0.99] ${
-                  n.read ? "border-border bg-card" : "border-orange-200 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-900/10"
+                className={`flex items-start gap-3 p-3.5 rounded-xl border transition-all cursor-pointer hover:border-teal-400/50 active:scale-[0.99] ${
+                  n.read ? "border-border bg-card" : "border-teal-200 dark:border-teal-800 bg-teal-50/50 dark:bg-teal-900/10"
                 }`}>
                 <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${cfg.color}`}>
                   <Icon size={14}/>
@@ -111,7 +111,7 @@ export default function NotificationsPage() {
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{n.message}</p>
                 </div>
-                {!n.read && <div className="w-2 h-2 rounded-full bg-orange-500 shrink-0 mt-1.5"/>}
+                {!n.read && <div className="w-2 h-2 rounded-full bg-teal-500 shrink-0 mt-1.5"/>}
               </div>
             );
           })}

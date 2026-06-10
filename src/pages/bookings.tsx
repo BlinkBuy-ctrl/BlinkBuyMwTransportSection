@@ -54,7 +54,7 @@ export default function BookingsPage() {
           <h2 className="text-base font-bold mb-1">No bookings yet</h2>
           <p className="text-sm text-muted-foreground mb-4">Your booking history will appear here</p>
           <Link href="/transport"
-            className="inline-flex items-center gap-1.5 bg-orange-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-orange-500 transition-all">
+            className="inline-flex items-center gap-1.5 bg-teal-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-teal-500 transition-all">
             Find a Ride <ArrowRight size={13}/>
           </Link>
         </div>
@@ -65,7 +65,7 @@ export default function BookingsPage() {
             const Icon = cfg.icon;
             return (
               <div key={b.id}
-                className="bg-card border border-card-border rounded-2xl p-4 cursor-pointer hover:border-orange-400/50 transition-all active:scale-[0.99]"
+                className="bg-card border border-card-border rounded-2xl p-4 cursor-pointer hover:border-teal-400/50 transition-all active:scale-[0.99]"
                 onClick={() => setActiveBooking({
                   id: b.id, listing_id: b.listing_id,
                   from_location: b.from_location, to_location: b.to_location,
@@ -89,7 +89,7 @@ export default function BookingsPage() {
                   {b.from_location}
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-orange-400 shrink-0"/>
+                  <div className="w-1.5 h-1.5 rounded-full bg-teal-400 shrink-0"/>
                   {b.to_location}
                 </div>
                 <div className="flex items-center gap-3 text-[10px] text-muted-foreground">

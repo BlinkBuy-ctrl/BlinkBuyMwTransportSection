@@ -141,7 +141,7 @@ export default function DashboardPage() {
             <RefreshCw size={14} className={`text-muted-foreground ${loading ? "animate-spin" : ""}`}/>
           </button>
           <Link href="/post-transport"
-            className="flex items-center gap-1.5 bg-orange-600 hover:bg-orange-500 text-white px-3 py-2 rounded-xl text-xs font-black transition-all active:scale-95">
+            className="flex items-center gap-1.5 bg-teal-600 hover:bg-teal-500 text-white px-3 py-2 rounded-xl text-xs font-black transition-all active:scale-95">
             <Plus size={13}/> New Listing
           </Link>
         </div>
@@ -201,7 +201,7 @@ export default function DashboardPage() {
                 Post your first transport listing and start getting passengers
               </p>
               <Link href="/post-transport"
-                className="inline-flex items-center gap-1.5 bg-orange-600 text-white px-5 py-2.5 rounded-xl text-sm font-black hover:bg-orange-500 transition-all active:scale-95">
+                className="inline-flex items-center gap-1.5 bg-teal-600 text-white px-5 py-2.5 rounded-xl text-sm font-black hover:bg-teal-500 transition-all active:scale-95">
                 <Plus size={14}/> Post Your First Listing
               </Link>
               <div className="mt-6 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3 text-left">
@@ -222,7 +222,7 @@ export default function DashboardPage() {
                   <div className="p-4">
                     <div className="flex items-start gap-3">
                       {/* Vehicle icon */}
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/40 dark:to-orange-800/30 flex items-center justify-center text-2xl shrink-0">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-100 to-teal-200 dark:from-teal-900/40 dark:to-teal-800/30 flex items-center justify-center text-2xl shrink-0">
                         {VEHICLE_EMOJI[l.vehicle_type] ?? "🚗"}
                       </div>
 
@@ -230,7 +230,7 @@ export default function DashboardPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <Link href={`/transport/${l.id}`}
-                            className="text-sm font-black hover:text-orange-600 transition-colors leading-tight">
+                            className="text-sm font-black hover:text-teal-600 transition-colors leading-tight">
                             {l.title}
                           </Link>
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
@@ -247,7 +247,7 @@ export default function DashboardPage() {
                             <MapPin size={9}/> {l.location}
                           </span>
                           {l.from_city && l.to_city && (
-                            <span className="text-orange-500 font-semibold">
+                            <span className="text-teal-500 font-semibold">
                               {l.from_city} → {l.to_city}
                             </span>
                           )}
@@ -264,7 +264,7 @@ export default function DashboardPage() {
                           </span>
                         </div>
 
-                        <div className="mt-1.5 text-xs font-black text-orange-600 dark:text-orange-400">
+                        <div className="mt-1.5 text-xs font-black text-teal-600 dark:text-teal-400">
                           {l.price_display || formatMK(l.price)}
                         </div>
                       </div>
@@ -315,7 +315,7 @@ export default function DashboardPage() {
               ))}
 
               <Link href="/post-transport"
-                className="flex items-center justify-center gap-1.5 py-3 border-2 border-dashed border-border rounded-2xl text-sm text-muted-foreground hover:border-orange-400 hover:text-orange-600 transition-all">
+                className="flex items-center justify-center gap-1.5 py-3 border-2 border-dashed border-border rounded-2xl text-sm text-muted-foreground hover:border-teal-400 hover:text-teal-600 transition-all">
                 <Plus size={14}/> Add Another Listing
               </Link>
             </div>

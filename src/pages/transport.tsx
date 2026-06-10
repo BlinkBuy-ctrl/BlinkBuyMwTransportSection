@@ -144,7 +144,7 @@ export default function TransportPage() {
               <button key={t} onClick={() => setTripType(t)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
                   tripType === t
-                    ? "bg-orange-600 text-white"
+                    ? "bg-teal-600 text-white"
                     : "bg-white/10 text-white/60 hover:bg-white/20"
                 }`}>
                 {t === "now" ? <Zap size={11}/> : <Calendar size={11}/>}
@@ -163,7 +163,7 @@ export default function TransportPage() {
               {from && <button onClick={() => setFrom("")}><X size={13} className="text-white/40"/></button>}
             </div>
             <div className="flex items-center gap-3 px-4 py-3">
-              <div className="w-2 h-2 rounded-full bg-orange-400 shrink-0"/>
+              <div className="w-2 h-2 rounded-full bg-teal-400 shrink-0"/>
               <input value={to} onChange={e => setTo(e.target.value)}
                 placeholder="Where to?"
                 className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/30"/>
@@ -182,7 +182,7 @@ export default function TransportPage() {
             </div>
             <button
               onClick={() => { setPage(1); setActiveTab("listings"); }}
-              className="bg-orange-600 hover:bg-orange-500 active:scale-95 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-1.5"
+              className="bg-teal-600 hover:bg-teal-500 active:scale-95 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-1.5"
             >
               <Search size={14}/> Search
             </button>
@@ -191,7 +191,7 @@ export default function TransportPage() {
           {/* Quick fare estimate link */}
           <button
             onClick={() => setActiveTab("estimator")}
-            className="mt-3 flex items-center gap-1.5 text-orange-300 text-xs font-semibold hover:text-orange-200 transition-all"
+            className="mt-3 flex items-center gap-1.5 text-teal-300 text-xs font-semibold hover:text-teal-200 transition-all"
           >
             <Zap size={11}/> Quick fare estimate →
           </button>
@@ -205,7 +205,7 @@ export default function TransportPage() {
             <button key={t.value} onClick={() => { setVehicleType(t.value); setActiveTab("listings"); }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all shrink-0 ${
                 vehicleType === t.value
-                  ? "bg-orange-600 text-white"
+                  ? "bg-teal-600 text-white"
                   : "bg-white/10 text-white/60 hover:bg-white/20"
               }`}>
               <t.icon size={11}/>{t.label}
@@ -227,7 +227,7 @@ export default function TransportPage() {
               onClick={() => setActiveTab(tab.key)}
               className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold border-b-2 transition-all ${
                 activeTab === tab.key
-                  ? "border-orange-500 text-orange-600 dark:text-orange-400"
+                  ? "border-teal-500 text-teal-600 dark:text-teal-400"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -263,18 +263,18 @@ export default function TransportPage() {
             {!from && !to && !loading && (
               <div className="mb-5">
                 <h2 className="text-sm font-black text-foreground mb-2.5 flex items-center gap-1.5">
-                  <Zap size={14} className="text-orange-500"/> Popular Routes
+                  <Zap size={14} className="text-teal-500"/> Popular Routes
                 </h2>
                 <div className="grid grid-cols-2 gap-2">
                   {POPULAR_ROUTES.map(r => (
                     <button key={r.from+r.to}
                       onClick={() => { setFrom(r.from); setTo(r.to); }}
-                      className="flex items-center justify-between bg-card border border-card-border rounded-xl px-3 py-2.5 text-left hover:border-orange-500/40 transition-all active:scale-95">
+                      className="flex items-center justify-between bg-card border border-card-border rounded-xl px-3 py-2.5 text-left hover:border-teal-500/40 transition-all active:scale-95">
                       <div>
                         <div className="text-xs font-bold text-foreground">{r.from} → {r.to}</div>
                         <div className="text-[10px] text-muted-foreground mt-0.5">From {r.est}</div>
                       </div>
-                      <MapPin size={13} className="text-orange-500 shrink-0"/>
+                      <MapPin size={13} className="text-teal-500 shrink-0"/>
                     </button>
                   ))}
                 </div>
@@ -288,7 +288,7 @@ export default function TransportPage() {
                   onClick={() => setShowFilters(!showFilters)}
                   className={`flex items-center gap-1.5 text-xs border rounded-lg px-3 py-1.5 transition-all ${
                     showFilters || onlineOnly
-                      ? "bg-orange-600 text-white border-orange-600"
+                      ? "bg-teal-600 text-white border-teal-600"
                       : "text-muted-foreground hover:text-foreground border-border"
                   }`}
                 >
@@ -313,7 +313,7 @@ export default function TransportPage() {
                     type="checkbox"
                     checked={onlineOnly}
                     onChange={e => setOnlineOnly(e.target.checked)}
-                    className="rounded accent-orange-500"
+                    className="rounded accent-teal-500"
                   />
                   <Zap size={11} className="text-green-500"/> Available right now only
                 </label>
@@ -343,7 +343,7 @@ export default function TransportPage() {
                 <h3 className="text-base font-bold mb-1">No drivers found</h3>
                 <p className="text-muted-foreground text-sm mb-4">Try a different location or vehicle type</p>
                 <Link href="/post-transport"
-                  className="inline-flex items-center gap-1.5 bg-orange-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-orange-500 transition-all">
+                  className="inline-flex items-center gap-1.5 bg-teal-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-teal-500 transition-all">
                   <Plus size={14}/> List Your Vehicle
                 </Link>
               </div>

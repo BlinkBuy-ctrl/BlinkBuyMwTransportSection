@@ -62,7 +62,7 @@ export default function SettingsPage() {
             </div>
             <div className="flex gap-1 mb-5">
               {TUTORIAL_STEPS.map((_,i) => (
-                <div key={i} className={`flex-1 h-1 rounded-full transition-all ${i <= tutorialStep ? "bg-orange-600" : "bg-muted"}`}/>
+                <div key={i} className={`flex-1 h-1 rounded-full transition-all ${i <= tutorialStep ? "bg-teal-600" : "bg-muted"}`}/>
               ))}
             </div>
             <div className="text-center mb-6">
@@ -77,12 +77,12 @@ export default function SettingsPage() {
               )}
               {tutorialStep < TUTORIAL_STEPS.length-1 ? (
                 <button onClick={() => setTutorialStep(s => s+1)}
-                  className="flex-1 py-2.5 rounded-xl bg-orange-600 text-white text-sm font-bold hover:bg-orange-500 transition-all flex items-center justify-center gap-1">
+                  className="flex-1 py-2.5 rounded-xl bg-teal-600 text-white text-sm font-bold hover:bg-teal-500 transition-all flex items-center justify-center gap-1">
                   Next <ChevronRight size={14}/>
                 </button>
               ) : (
                 <button onClick={() => { setShowTutorial(false); setTutorialStep(0); }}
-                  className="flex-1 py-2.5 rounded-xl bg-orange-600 text-white text-sm font-bold hover:bg-orange-500 transition-all">Done 🎉</button>
+                  className="flex-1 py-2.5 rounded-xl bg-teal-600 text-white text-sm font-bold hover:bg-teal-500 transition-all">Done 🎉</button>
               )}
             </div>
             <p className="text-center text-xs text-muted-foreground mt-3">Step {tutorialStep+1} of {TUTORIAL_STEPS.length}</p>
@@ -118,7 +118,7 @@ export default function SettingsPage() {
             <div className="text-xs text-muted-foreground">Switch between light and dark theme</div>
           </div>
           <button onClick={toggleTheme}
-            className={`w-12 h-6 rounded-full transition-all relative ${theme === "dark" ? "bg-orange-600" : "bg-muted"}`}>
+            className={`w-12 h-6 rounded-full transition-all relative ${theme === "dark" ? "bg-teal-600" : "bg-muted"}`}>
             <div className={`w-5 h-5 rounded-full bg-white shadow absolute top-0.5 transition-all ${theme === "dark" ? "left-6" : "left-0.5"}`}/>
           </button>
         </div>
@@ -131,11 +131,11 @@ export default function SettingsPage() {
           </div>
           <div className="flex rounded-lg border border-input overflow-hidden">
             <button onClick={() => handleLangChange("en")}
-              className={`px-3 py-1.5 text-xs font-medium transition-all ${lang==="en" ? "bg-orange-600 text-white" : "text-foreground hover:bg-muted"}`}>
+              className={`px-3 py-1.5 text-xs font-medium transition-all ${lang==="en" ? "bg-teal-600 text-white" : "text-foreground hover:bg-muted"}`}>
               English
             </button>
             <button onClick={() => handleLangChange("ny")}
-              className={`px-3 py-1.5 text-xs font-medium transition-all ${lang==="ny" ? "bg-orange-600 text-white" : "text-foreground hover:bg-muted"}`}>
+              className={`px-3 py-1.5 text-xs font-medium transition-all ${lang==="ny" ? "bg-teal-600 text-white" : "text-foreground hover:bg-muted"}`}>
               Chichewa
             </button>
           </div>
@@ -148,7 +148,7 @@ export default function SettingsPage() {
             <div className="text-xs text-muted-foreground">Step-by-step guide</div>
           </div>
           <button onClick={() => { setTutorialStep(0); setShowTutorial(true); }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-orange-500 text-orange-600 text-xs font-semibold hover:bg-orange-50 dark:hover:bg-orange-900/10 transition-all">
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-teal-500 text-teal-600 text-xs font-semibold hover:bg-teal-50 dark:hover:bg-teal-900/10 transition-all">
             <BookOpen size={13}/> Tutorial
           </button>
         </div>
@@ -160,7 +160,7 @@ export default function SettingsPage() {
             <div className="text-xs text-muted-foreground">Add TransportMW to your home screen</div>
           </div>
           <button onClick={handleInstall}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-600 text-white text-xs font-semibold hover:bg-orange-500 transition-all active:scale-95">
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-600 text-white text-xs font-semibold hover:bg-teal-500 transition-all active:scale-95">
             <Download size={13}/> Install
           </button>
         </div>

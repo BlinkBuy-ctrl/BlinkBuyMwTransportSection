@@ -128,7 +128,7 @@ export default function TransportDetailPage() {
     <div className="text-center py-20">
       <Car size={40} className="mx-auto text-muted-foreground opacity-20 mb-3"/>
       <p className="text-muted-foreground mb-3">Listing not found</p>
-      <Link href="/transport" className="text-orange-500 text-sm hover:underline">← Back to search</Link>
+      <Link href="/transport" className="text-teal-500 text-sm hover:underline">← Back to search</Link>
     </div>
   );
 
@@ -178,7 +178,7 @@ export default function TransportDetailPage() {
       <div className="bg-card border border-card-border rounded-2xl p-5 mb-4">
         <div className="flex items-start gap-3">
           <div className="relative shrink-0">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/40 dark:to-orange-800/30 flex items-center justify-center text-3xl overflow-hidden">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-100 to-teal-200 dark:from-teal-900/40 dark:to-teal-800/30 flex items-center justify-center text-3xl overflow-hidden">
               {VEHICLE_EMOJI[listing.vehicle_type] ?? "🚗"}
             </div>
             {listing.is_online && (
@@ -191,7 +191,7 @@ export default function TransportDetailPage() {
             <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
               <MapPin size={10}/>{listing.location}
               {listing.from_city && listing.to_city && (
-                <span className="text-orange-500 font-semibold ml-1">· {listing.from_city} → {listing.to_city}</span>
+                <span className="text-teal-500 font-semibold ml-1">· {listing.from_city} → {listing.to_city}</span>
               )}
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -230,7 +230,7 @@ export default function TransportDetailPage() {
             <div className="text-[10px] text-muted-foreground mt-1">Profile Views</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-black text-orange-600 dark:text-orange-400">{priceDisplay}</div>
+            <div className="text-lg font-black text-teal-600 dark:text-teal-400">{priceDisplay}</div>
             <div className="text-[10px] text-muted-foreground mt-1">Starting from</div>
           </div>
         </div>
@@ -255,7 +255,7 @@ export default function TransportDetailPage() {
           {listing.tags?.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-3">
               {listing.tags.map((t: string) => (
-                <span key={t} className="text-[10px] bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 px-2 py-1 rounded-full font-semibold">{t}</span>
+                <span key={t} className="text-[10px] bg-teal-100 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 px-2 py-1 rounded-full font-semibold">{t}</span>
               ))}
             </div>
           )}
@@ -326,9 +326,9 @@ export default function TransportDetailPage() {
 
       {/* BOOKING FORM */}
       {showBooking && (
-        <div className="bg-card border border-orange-500/30 rounded-2xl p-4 mb-4 animate-in slide-in-from-bottom-4 duration-200">
+        <div className="bg-card border border-teal-500/30 rounded-2xl p-4 mb-4 animate-in slide-in-from-bottom-4 duration-200">
           <h2 className="text-sm font-black mb-4 flex items-center gap-1.5">
-            <Calendar size={14} className="text-orange-500"/> Book This Driver
+            <Calendar size={14} className="text-teal-500"/> Book This Driver
           </h2>
 
           <div className="flex gap-2 mb-3">
@@ -336,8 +336,8 @@ export default function TransportDetailPage() {
               <button key={t} onClick={() => setBooking(b => ({...b, tripType:t}))}
                 className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all ${
                   booking.tripType === t
-                    ? "bg-orange-600 border-orange-600 text-white"
-                    : "border-border text-muted-foreground hover:border-orange-400"
+                    ? "bg-teal-600 border-teal-600 text-white"
+                    : "border-border text-muted-foreground hover:border-teal-400"
                 }`}>{t === "one-way" ? "One Way" : "Round Trip"}</button>
             ))}
           </div>
@@ -351,7 +351,7 @@ export default function TransportDetailPage() {
                   className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"/>
               </div>
               <div className="flex items-center gap-2 px-3 py-2.5">
-                <div className="w-2 h-2 rounded-full bg-orange-400 shrink-0"/>
+                <div className="w-2 h-2 rounded-full bg-teal-400 shrink-0"/>
                 <input value={booking.to} onChange={e => setBooking(b=>({...b,to:e.target.value}))}
                   placeholder="Destination"
                   className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"/>
@@ -363,12 +363,12 @@ export default function TransportDetailPage() {
                 <label className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide mb-1 block">Date</label>
                 <input type="date" value={booking.date} onChange={e => setBooking(b=>({...b,date:e.target.value}))}
                   min={new Date().toISOString().split("T")[0]}
-                  className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-orange-500"/>
+                  className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-teal-500"/>
               </div>
               <div>
                 <label className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide mb-1 block">Time</label>
                 <input type="time" value={booking.time} onChange={e => setBooking(b=>({...b,time:e.target.value}))}
-                  className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-orange-500"/>
+                  className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-teal-500"/>
               </div>
             </div>
 
@@ -376,7 +376,7 @@ export default function TransportDetailPage() {
               <div>
                 <label className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide mb-1 block flex items-center gap-1"><Users size={9}/> Passengers</label>
                 <select value={booking.passengers} onChange={e => setBooking(b=>({...b,passengers:e.target.value}))}
-                  className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-orange-500">
+                  className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-teal-500">
                   {["1","2","3","4","5","6","7","8+"].map(n => <option key={n}>{n}</option>)}
                 </select>
               </div>
@@ -384,7 +384,7 @@ export default function TransportDetailPage() {
                 <label className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide mb-1 block">Your Name</label>
                 <input value={booking.name} onChange={e => setBooking(b=>({...b,name:e.target.value}))}
                   placeholder="Optional"
-                  className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-orange-500"/>
+                  className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-teal-500"/>
               </div>
             </div>
 
@@ -395,8 +395,8 @@ export default function TransportDetailPage() {
                   <button key={p.id} onClick={() => setBooking(b=>({...b,payment:p.id}))}
                     className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border text-xs font-bold transition-all ${
                       booking.payment === p.id
-                        ? "border-orange-500 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300"
-                        : "border-border text-muted-foreground hover:border-orange-300"
+                        ? "border-teal-500 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300"
+                        : "border-border text-muted-foreground hover:border-teal-300"
                     }`}>
                     <span className="text-base">{p.icon}</span>
                     <span className="text-[10px] leading-tight text-center">{p.label}</span>
@@ -412,7 +412,7 @@ export default function TransportDetailPage() {
 
             <textarea value={booking.notes} onChange={e => setBooking(b=>({...b,notes:e.target.value}))}
               placeholder="Luggage, special instructions, landmarks..." rows={2}
-              className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none resize-none focus:border-orange-500"/>
+              className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none resize-none focus:border-teal-500"/>
           </div>
 
           {bookingError && (
@@ -427,7 +427,7 @@ export default function TransportDetailPage() {
               Cancel
             </button>
             <button onClick={handleBooking} disabled={bookingLoading}
-              className="flex-1 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-sm font-black transition-all active:scale-95 disabled:opacity-60">
+              className="flex-1 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-sm font-black transition-all active:scale-95 disabled:opacity-60">
               {bookingLoading ? "Sending…" : "Confirm Booking"}
             </button>
           </div>
@@ -451,7 +451,7 @@ export default function TransportDetailPage() {
             </a>
           )}
           <button onClick={() => setShowBooking(b => !b)}
-            className="flex items-center justify-center gap-1.5 flex-1 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-sm font-black transition-all active:scale-95">
+            className="flex items-center justify-center gap-1.5 flex-1 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-sm font-black transition-all active:scale-95">
             <Calendar size={15}/> {showBooking ? "Hide" : "Book Now"}
           </button>
         </div>

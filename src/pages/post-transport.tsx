@@ -159,7 +159,7 @@ export default function PostTransportPage() {
         </button>
         <button
           onClick={() => setLocation("/dashboard")}
-          className="px-5 py-2.5 bg-orange-600 text-white rounded-xl text-sm font-black hover:bg-orange-500 transition-all active:scale-95"
+          className="px-5 py-2.5 bg-teal-600 text-white rounded-xl text-sm font-black hover:bg-teal-500 transition-all active:scale-95"
         >
           My Listings
         </button>
@@ -167,7 +167,7 @@ export default function PostTransportPage() {
       {listingId && (
         <button
           onClick={() => setLocation(`/transport/${listingId}`)}
-          className="mt-3 text-xs text-orange-600 hover:underline"
+          className="mt-3 text-xs text-teal-600 hover:underline"
         >
           Preview listing →
         </button>
@@ -194,7 +194,7 @@ export default function PostTransportPage() {
               onClick={() => i < step && setStep(i)}
               className={`flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-black transition-all ${
                 i < step  ? "bg-green-500 text-white cursor-pointer hover:scale-110" :
-                i === step ? "bg-orange-600 text-white" :
+                i === step ? "bg-teal-600 text-white" :
                 "bg-muted text-muted-foreground cursor-default"
               }`}
             >
@@ -220,8 +220,8 @@ export default function PostTransportPage() {
                 <button key={t} onClick={() => set("vehicleType", t)}
                   className={`py-2.5 px-1 rounded-xl text-xs font-semibold border transition-all text-center leading-tight flex flex-col items-center gap-1 ${
                     form.vehicleType === t
-                      ? "bg-orange-600 border-orange-600 text-white"
-                      : "border-border text-muted-foreground hover:border-orange-400"
+                      ? "bg-teal-600 border-teal-600 text-white"
+                      : "border-border text-muted-foreground hover:border-teal-400"
                   }`}>
                   <span className="text-lg">{VEHICLE_ICONS[t]}</span>
                   {t}
@@ -238,7 +238,7 @@ export default function PostTransportPage() {
               value={form.title}
               onChange={e => set("title", e.target.value)}
               placeholder={`e.g. ${form.vehicleType} – Lilongwe City Rides`}
-              className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-orange-500 transition-all"
+              className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-teal-500 transition-all"
             />
             <p className="text-[10px] text-muted-foreground mt-1">Min 5 characters — be clear and descriptive</p>
           </div>
@@ -252,7 +252,7 @@ export default function PostTransportPage() {
               onChange={e => set("description", e.target.value)}
               placeholder="Tell passengers about your vehicle, experience, areas you cover..."
               rows={3}
-              className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none resize-none focus:border-orange-500 transition-all"
+              className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none resize-none focus:border-teal-500 transition-all"
             />
           </div>
 
@@ -267,7 +267,7 @@ export default function PostTransportPage() {
                   value={form.whatsapp}
                   onChange={e => set("whatsapp", e.target.value.replace(/\D/g, ""))}
                   placeholder="999123456" maxLength={9}
-                  className="flex-1 px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-orange-500 transition-all"
+                  className="flex-1 px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-teal-500 transition-all"
                 />
               </div>
             </div>
@@ -281,7 +281,7 @@ export default function PostTransportPage() {
                   value={form.phone}
                   onChange={e => set("phone", e.target.value.replace(/\D/g, ""))}
                   placeholder="888123456" maxLength={9}
-                  className="flex-1 px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-orange-500 transition-all"
+                  className="flex-1 px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-teal-500 transition-all"
                 />
               </div>
             </div>
@@ -305,7 +305,7 @@ export default function PostTransportPage() {
                       set(key, e.target.value);
                       if (key === "fromCity") set("location", e.target.value);
                     }}
-                    className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none appearance-none focus:border-orange-500 pr-8"
+                    className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none appearance-none focus:border-teal-500 pr-8"
                   >
                     {CITIES.map(c => <option key={c}>{c}</option>)}
                   </select>
@@ -320,7 +320,7 @@ export default function PostTransportPage() {
               type="checkbox"
               checked={form.coverOtherRoutes}
               onChange={e => set("coverOtherRoutes", e.target.checked)}
-              className="accent-orange-500 w-4 h-4 rounded"
+              className="accent-teal-500 w-4 h-4 rounded"
             />
             <span className="text-xs text-muted-foreground">I also cover other routes on request</span>
           </label>
@@ -334,7 +334,7 @@ export default function PostTransportPage() {
                 <select
                   value={form.priceType}
                   onChange={e => set("priceType", e.target.value)}
-                  className="pl-3 pr-7 py-2.5 rounded-xl border border-input bg-background text-sm outline-none appearance-none focus:border-orange-500"
+                  className="pl-3 pr-7 py-2.5 rounded-xl border border-input bg-background text-sm outline-none appearance-none focus:border-teal-500"
                 >
                   {PRICE_TYPES.map(p => <option key={p}>{p}</option>)}
                 </select>
@@ -344,7 +344,7 @@ export default function PostTransportPage() {
                 value={form.price}
                 onChange={e => set("price", e.target.value.replace(/\D/g, ""))}
                 placeholder="e.g. 8000" type="tel"
-                className="flex-1 px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-orange-500 transition-all"
+                className="flex-1 px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-teal-500 transition-all"
               />
             </div>
             <p className="text-[10px] text-muted-foreground mt-1">Amount in Malawi Kwacha (MK) — leave blank if negotiable</p>
@@ -358,7 +358,7 @@ export default function PostTransportPage() {
               value={form.priceDisplay}
               onChange={e => set("priceDisplay", e.target.value)}
               placeholder={`e.g. From MK ${Number(form.price || 0).toLocaleString()} per trip`}
-              className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-orange-500 transition-all"
+              className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-teal-500 transition-all"
             />
           </div>
         </div>
@@ -398,8 +398,8 @@ export default function PostTransportPage() {
                 <button key={tag} onClick={() => toggleTag(tag)}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
                     form.tags.includes(tag)
-                      ? "bg-orange-600 border-orange-600 text-white"
-                      : "border-border text-muted-foreground hover:border-orange-400"
+                      ? "bg-teal-600 border-teal-600 text-white"
+                      : "border-border text-muted-foreground hover:border-teal-400"
                   }`}
                 >{tag}</button>
               ))}
@@ -464,7 +464,7 @@ export default function PostTransportPage() {
             <button
               onClick={() => setStep(s => s + 1)}
               disabled={!canNext()}
-              className="flex-1 py-2.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-sm font-black transition-all active:scale-95 disabled:opacity-40"
+              className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-black transition-all active:scale-95 disabled:opacity-40"
             >
               Continue →
             </button>
