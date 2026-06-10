@@ -36,12 +36,12 @@ function Loader() {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-background z-50">
       <div className="flex flex-col items-center gap-3">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center animate-pulse shadow-lg">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center animate-pulse shadow-lg">
           <span className="text-white font-black text-lg">T</span>
         </div>
         <div className="flex gap-1">
           {[0,150,300].map(d => (
-            <span key={d} className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"
+            <span key={d} className="w-2 h-2 bg-teal-500 rounded-full animate-bounce"
               style={{ animationDelay: `${d}ms` }}/>
           ))}
         </div>
