@@ -1,25 +1,13 @@
+import { useState } from "react";
 import { Link } from "wouter";
-import { MapPin, Star, MessageCircle, Phone, Zap, Shield, Award } from "lucide-react";
+import { MapPin, Star, MessageCircle, Phone, Zap, Shield, ChevronRight } from "lucide-react";
 
 const EMOJI: Record<string, string> = {
   "Taxi":"🚕","Motorcycle":"🏍️","Minibus":"🚌","Shuttle":"🚐","Hire Car":"🚗",
   "Airport Transfer":"✈️","Cargo / Delivery":"🚛","School Transport":"🏫",
   "Corporate Transport":"🏢","Other":"🚘",
 };
-const GRAD = [
-  "from-teal-400 to-teal-600","from-blue-400 to-blue-600",
-  "from-green-400 to-green-600","from-purple-400 to-purple-600",
-  "from-pink-400 to-pink-600","from-teal-400 to-teal-600",
-];
-const pickGrad = (s: string) => GRAD[(s?.charCodeAt(0)||65) % GRAD.length];
 
-interface Worker {
-  name?: string; profilePhoto?: string; profile_photo?: string;
-  isVerified?: boolean; is_verified?: boolean;
-  isTrusted?: boolean; is_trusted?: boolean;
-  badge?: string; whatsapp?: string; phone?: string;
-  jobs_completed?: number;
-}
 export interface Service {
   id: string; title: string; description?: string;
   vehicle_type?: string; category?: string;
@@ -34,133 +22,144 @@ export interface Service {
   is_premium?: boolean;
   tags?: string[];
   whatsapp?: string; phone?: string;
-  worker?: Worker | null;
+  worker?: { name?: string; profilePhoto?: string; profile_photo?: string;
+    isVerified?: boolean; is_verified?: boolean; badge?: string;
+    whatsapp?: string; phone?: string; } | null;
 }
 
 export function ServiceCard({ service: s }: { service: Service }) {
+  const [pressed, setPressed] = useState(false);
   const w          = s.worker;
   const isOnline   = s.is_online   ?? s.isOnline   ?? false;
-  const isFeatured = s.is_featured ?? s.isFeatured  ?? false;
   const isPremium  = s.is_premium  ?? false;
+  const isFeatured = s.is_featured ?? s.isFeatured  ?? false;
   const verified   = w?.is_verified ?? w?.isVerified ?? false;
-  const trusted    = w?.is_trusted  ?? w?.isTrusted  ?? false;
-  const photo      = w?.profile_photo ?? w?.profilePhoto;
   const priceDisp  = s.price_display ?? s.priceDisplay
     ?? (s.price ? `MK ${Number(s.price).toLocaleString()}` : "Negotiable");
   const reviews    = s.review_count ?? s.reviewCount ?? 0;
-  const vType      = s.vehicle_type ?? s.tags?.[0] ?? "";
+  const vType      = s.vehicle_type ?? "";
   const waNum      = s.whatsapp ?? w?.whatsapp;
-  const phone      = s.phone    ?? w?.phone;
+  const phoneNum   = s.phone ?? w?.phone;
+  const rating     = s.rating ?? 0;
 
   return (
     <Link href={`/transport/${s.id}`}>
-      <div className={`group bg-card border rounded-xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer ${
-        isPremium  ? "border-yellow-400/50 shadow-yellow-500/5 shadow-md" :
-        isFeatured ? "border-teal-500/40 shadow-teal-500/5 shadow-md" :
-        "border-card-border"
-      }`}>
+      <div
+        onMouseDown={() => setPressed(true)}
+        onMouseUp={() => setPressed(false)}
+        onTouchStart={() => setPressed(true)}
+        onTouchEnd={() => setPressed(false)}
+        style={{ transform: pressed ? "scale(0.97)" : "scale(1)", transition: "transform 120ms ease" }}
+        className={`group relative bg-card rounded-2xl overflow-hidden cursor-pointer
+          ${isPremium
+            ? "border-2 border-yellow-400/60 shadow-lg shadow-yellow-500/10"
+            : isFeatured
+            ? "border-2 border-teal-400/60 shadow-lg shadow-teal-500/10"
+            : "border border-card-border hover:border-teal-500/40 hover:shadow-md hover:shadow-teal-500/5"
+          }`}
+      >
+        {/* Premium/Featured ribbon */}
         {(isPremium || isFeatured) && (
-          <div className={`text-white text-[10px] font-black px-3 py-1 text-center tracking-wider uppercase ${
-            isPremium ? "bg-gradient-to-r from-yellow-500 to-amber-500"
-                      : "bg-gradient-to-r from-teal-600 to-teal-500"
-          }`}>
-            {isPremium ? "⭐ Premium Driver" : "⭐ Featured"}
+          <div className={`flex items-center justify-center gap-1.5 py-1 text-[10px] font-black tracking-widest uppercase text-white
+            ${isPremium ? "bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-500"
+                       : "bg-gradient-to-r from-teal-600 to-teal-500"}`}>
+            ⭐ {isPremium ? "Premium Driver" : "Featured"}
+          </div>
+        )}
+
+        {/* Online pulse indicator */}
+        {isOnline && (
+          <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-green-500/20 border border-green-400/30 rounded-full px-2 py-0.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"/>
+            <span className="text-[9px] font-bold text-green-400">LIVE</span>
           </div>
         )}
 
         <div className="p-4">
-          {/* Avatar + title row */}
+          {/* Top row: emoji avatar + title */}
           <div className="flex items-start gap-3 mb-3">
             <div className="relative shrink-0">
-              {w?.name ? (
-                <div className={`w-11 h-11 rounded-full bg-gradient-to-br ${pickGrad(w.name)} flex items-center justify-center text-sm font-black text-white overflow-hidden`}>
-                  {photo ? <img src={photo} alt="" className="w-full h-full object-cover"/> : w.name.charAt(0)}
-                </div>
-              ) : (
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-100 to-teal-200 dark:from-teal-900/40 dark:to-teal-800/30 flex items-center justify-center text-2xl">
-                  {EMOJI[vType] ?? "🚗"}
-                </div>
-              )}
-              {isOnline && <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-card"/>}
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-500/20 to-teal-600/30 border border-teal-500/20 flex items-center justify-center text-3xl">
+                {EMOJI[vType] ?? "🚗"}
+              </div>
             </div>
 
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 pt-0.5">
               <h3 className="text-sm font-black text-foreground group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors line-clamp-2 leading-snug mb-1">
                 {s.title}
               </h3>
-              <div className="flex items-center gap-1 text-[11px] text-muted-foreground flex-wrap">
-                <MapPin size={9} className="shrink-0"/><span className="truncate">{s.location}</span>
-                {s.from_city && s.to_city && (
-                  <span className="text-teal-500 font-semibold shrink-0">· {s.from_city}→{s.to_city}</span>
-                )}
+              <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <MapPin size={9} className="shrink-0 text-teal-500"/>
+                <span className="truncate">{s.location}</span>
               </div>
-              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                {verified && (
-                  <span className="flex items-center gap-0.5 text-[9px] bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded-full font-bold">
-                    <Shield size={8}/> Verified
+              {s.from_city && s.to_city && (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20 px-1.5 py-0.5 rounded-full">
+                    {s.from_city} → {s.to_city}
                   </span>
-                )}
-                {w?.badge && (
-                  <span className="text-[9px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full font-bold">
-                    🏅 {w.badge}
-                  </span>
-                )}
-                {isOnline && (
-                  <span className="flex items-center gap-0.5 text-[9px] bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-1.5 py-0.5 rounded-full font-bold">
-                    <Zap size={8}/> Online
-                  </span>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
 
-          {s.description && (
-            <p className="text-xs text-muted-foreground line-clamp-2 mb-2.5 leading-relaxed">{s.description}</p>
-          )}
+          {/* Badges row */}
+          <div className="flex items-center gap-1 flex-wrap mb-3">
+            {verified && (
+              <span className="flex items-center gap-0.5 text-[9px] bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full font-bold border border-blue-200/50 dark:border-blue-700/30">
+                <Shield size={8}/> Verified
+              </span>
+            )}
+            {s.tags?.slice(0, 2).map(t => (
+              <span key={t} className="text-[9px] bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 px-2 py-0.5 rounded-full font-semibold border border-teal-100 dark:border-teal-800/30">
+                {t}
+              </span>
+            ))}
+          </div>
 
-          {s.tags && s.tags.length > 0 && (
-            <div className="flex gap-1 flex-wrap mb-2.5">
-              {s.tags.slice(0,3).map(t => (
-                <span key={t} className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">{t}</span>
-              ))}
-              {s.tags.length > 3 && <span className="text-[9px] text-muted-foreground">+{s.tags.length-3}</span>}
-            </div>
-          )}
-
-          {/* Rating + price */}
-          <div className="flex items-center justify-between pt-2.5 border-t border-border/50">
-            <div className="flex items-center gap-1">
-              <div className="flex">
+          {/* Star rating — visual and prominent */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-0.5">
                 {[1,2,3,4,5].map(i => (
-                  <Star key={i} size={10} className={i <= Math.round(s.rating||0) ? "fill-amber-400 text-amber-400" : "fill-muted text-muted"}/>
+                  <Star key={i} size={12}
+                    className={i <= Math.round(rating)
+                      ? "fill-amber-400 text-amber-400"
+                      : "fill-muted text-muted"}
+                  />
                 ))}
               </div>
-              <span className="text-[10px] text-muted-foreground ml-0.5">
-                {s.rating ? s.rating.toFixed(1) : "New"}{reviews > 0 && ` (${reviews})`}
+              <span className="text-xs font-bold text-foreground">
+                {rating > 0 ? rating.toFixed(1) : "New"}
               </span>
+              {reviews > 0 && (
+                <span className="text-[10px] text-muted-foreground">({reviews})</span>
+              )}
             </div>
-            <div className="text-sm font-black text-teal-600 dark:text-teal-400">{priceDisp}</div>
+            <span className="text-sm font-black text-teal-600 dark:text-teal-400">{priceDisp}</span>
+          </div>
+
+          {/* CTA row */}
+          <div className="flex items-center justify-between pt-2.5 border-t border-border/50">
+            <div className="flex gap-1.5">
+              {phoneNum && (
+                <a href={`tel:+265${phoneNum}`} onClick={e => e.stopPropagation()}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-border text-[11px] text-muted-foreground hover:bg-muted hover:text-foreground transition-all active:scale-95">
+                  <Phone size={11}/> Call
+                </a>
+              )}
+              {waNum && (
+                <a href={`https://wa.me/265${waNum}?text=Hi, I found you on TransportMW!`}
+                  target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-green-600 text-[11px] text-white font-bold hover:bg-green-500 transition-all active:scale-95">
+                  <MessageCircle size={11}/> WhatsApp
+                </a>
+              )}
+            </div>
+            <span className="flex items-center gap-0.5 text-[11px] text-teal-600 dark:text-teal-400 font-bold group-hover:gap-1.5 transition-all">
+              Book <ChevronRight size={12}/>
+            </span>
           </div>
         </div>
-
-        {/* Quick contact strip */}
-        {(waNum || phone) && (
-          <div className="border-t border-border/60 flex divide-x divide-border/60 lg:opacity-0 lg:group-hover:opacity-100 opacity-100 transition-opacity">
-            {phone && (
-              <a href={`tel:+265${phone}`} onClick={e => e.stopPropagation()}
-                className="flex-1 flex items-center justify-center gap-1 py-2 text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
-                <Phone size={11}/> Call
-              </a>
-            )}
-            {waNum && (
-              <a href={`https://wa.me/265${waNum}?text=Hi, I found you on TransportMW!`}
-                target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-                className="flex-1 flex items-center justify-center gap-1 py-2 text-[11px] text-green-600 hover:bg-green-50 dark:hover:bg-green-900/10 transition-all">
-                <MessageCircle size={11}/> WhatsApp
-              </a>
-            )}
-          </div>
-        )}
       </div>
     </Link>
   );
