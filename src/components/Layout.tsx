@@ -55,7 +55,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {showInstallBanner && (
         <div className="fixed bottom-20 left-4 right-4 z-[60] md:bottom-6 md:left-auto md:right-6 md:w-80 animate-in slide-in-from-bottom-4 duration-300">
           <div className="bg-[hsl(215,55%,12%)] border border-white/10 rounded-2xl p-4 shadow-2xl flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center shrink-0">
               <Car size={18} className="text-white"/>
             </div>
             <div className="flex-1 min-w-0">
@@ -63,7 +63,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <p className="text-white/50 text-xs mt-0.5">Fast access — works offline too</p>
               <div className="flex gap-2 mt-2.5">
                 <button onClick={async () => { await install(); setShowInstallBanner(false); }}
-                  className="flex items-center gap-1.5 bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all active:scale-95">
+                  className="flex items-center gap-1.5 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all active:scale-95">
                   <Download size={12}/> Install
                 </button>
                 <button onClick={dismissBanner} className="text-white/40 hover:text-white text-xs px-2 transition-all">
@@ -85,12 +85,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
             {/* Brand */}
             <Link href="/" className="flex items-center gap-2 shrink-0 group">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-150 active:scale-95">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-150 active:scale-95">
                 <Car size={16} className="text-white"/>
               </div>
               <div className="flex flex-col leading-none">
                 <span className="font-black text-base tracking-tight text-white">TransportMW</span>
-                <span className="text-[9px] text-orange-400 font-semibold tracking-wider uppercase hidden sm:block">
+                <span className="text-[9px] text-teal-400 font-semibold tracking-wider uppercase hidden sm:block">
                   Malawi's Ride Hub
                 </span>
               </div>
@@ -134,7 +134,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </Link>
 
               <Link href="/post-transport"
-                className="hidden sm:flex items-center gap-1 bg-orange-600 hover:bg-orange-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95">
+                className="hidden sm:flex items-center gap-1 bg-teal-600 hover:bg-teal-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95">
                 <Plus size={13}/> Post Route
               </Link>
 
@@ -192,11 +192,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             return (
               <Link key={n.href} href={n.href}
                 className={`flex flex-col items-center gap-0.5 px-1 py-2 rounded-xl transition-all duration-150 active:scale-90 min-w-0 flex-1 ${
-                  active ? "text-orange-400" : "text-white/40 hover:text-white/70"
+                  active ? "text-teal-400" : "text-white/40 hover:text-white/70"
                 }`}>
                 <div className="relative">
                   {n.highlight ? (
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center -mt-4 shadow-lg ${active ? "bg-orange-500" : "bg-orange-700"}`}>
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center -mt-4 shadow-lg ${active ? "bg-teal-500" : "bg-teal-700"}`}>
                       <n.icon size={18} className="text-white" strokeWidth={2}/>
                     </div>
                   ) : (
@@ -204,7 +204,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   )}
                 </div>
                 <span className="text-[9px] font-medium whitespace-nowrap leading-none mt-0.5">{n.label}</span>
-                {active && !n.highlight && <span className="w-1 h-1 rounded-full bg-orange-400 mt-0.5"/>}
+                {active && !n.highlight && <span className="w-1 h-1 rounded-full bg-teal-400 mt-0.5"/>}
               </Link>
             );
           })}
@@ -220,7 +220,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center">
                   <Car size={16} className="text-white"/>
                 </div>
                 <span className="font-black text-white text-lg">TransportMW</span>
@@ -293,7 +293,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
           <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className="text-xs text-white/30 text-center sm:text-left">
-              Powered by <span className="text-orange-400 font-bold">O-techy</span> · Built for Malawi. Your Ideas To Reality.
+              Powered by <span className="text-teal-400 font-bold">O-techy</span> · Built for Malawi. Your Ideas To Reality.
             </p>
             <p className="text-xs text-white/20">© 2026 TransportMW. All rights reserved.</p>
           </div>

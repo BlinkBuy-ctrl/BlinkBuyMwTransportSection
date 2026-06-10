@@ -21,7 +21,7 @@ const CITIES = [
 
 // Price per km by vehicle type (MK)
 const RATES = {
-  taxi:       { perKm: 30,  base: 500,  label: "Taxi",       icon: "🚕", color: "bg-orange-500" },
+  taxi:       { perKm: 30,  base: 500,  label: "Taxi",       icon: "🚕", color: "bg-teal-500" },
   motorcycle: { perKm: 18,  base: 300,  label: "Motorcycle", icon: "🏍️", color: "bg-blue-500" },
   minibus:    { perKm: 12,  base: 200,  label: "Minibus",    icon: "🚌", color: "bg-purple-500" },
   hire_car:   { perKm: 45,  base: 800,  label: "Hire Car",   icon: "🚗", color: "bg-green-600" },
@@ -89,10 +89,10 @@ export default function FareEstimator() {
   return (
     <div className="bg-card border border-card-border rounded-2xl overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-600 to-orange-700 px-4 py-3 flex items-center gap-2">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-4 py-3 flex items-center gap-2">
         <Calculator size={16} className="text-white" />
         <span className="text-white font-black text-sm">Fare Estimator</span>
-        <span className="ml-auto text-orange-200 text-xs font-medium">Live Rates</span>
+        <span className="ml-auto text-teal-200 text-xs font-medium">Live Rates</span>
       </div>
 
       <div className="p-4 space-y-4">
@@ -123,7 +123,7 @@ export default function FareEstimator() {
                   <select
                     value={from}
                     onChange={e => setFrom(e.target.value)}
-                    className="w-full pl-3 pr-7 py-2 rounded-xl border border-input bg-background text-xs font-semibold outline-none appearance-none focus:border-orange-500"
+                    className="w-full pl-3 pr-7 py-2 rounded-xl border border-input bg-background text-xs font-semibold outline-none appearance-none focus:border-teal-500"
                   >
                     {CITIES.map(c => <option key={c}>{c}</option>)}
                   </select>
@@ -136,7 +136,7 @@ export default function FareEstimator() {
                   <select
                     value={to}
                     onChange={e => setTo(e.target.value)}
-                    className="w-full pl-3 pr-7 py-2 rounded-xl border border-input bg-background text-xs font-semibold outline-none appearance-none focus:border-orange-500"
+                    className="w-full pl-3 pr-7 py-2 rounded-xl border border-input bg-background text-xs font-semibold outline-none appearance-none focus:border-teal-500"
                   >
                     {CITIES.filter(c => c !== from).map(c => <option key={c}>{c}</option>)}
                   </select>
@@ -147,7 +147,7 @@ export default function FareEstimator() {
 
             {distance && (
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <div className="w-full h-0.5 bg-gradient-to-r from-green-400 via-orange-400 to-orange-600 rounded-full" />
+                <div className="w-full h-0.5 bg-gradient-to-r from-green-400 via-teal-400 to-teal-600 rounded-full" />
                 <span className="shrink-0 font-bold text-foreground">~{distance} km</span>
               </div>
             )}
@@ -171,7 +171,7 @@ export default function FareEstimator() {
               max={12}
               value={hours}
               onChange={e => setHours(Number(e.target.value))}
-              className="w-full accent-orange-500"
+              className="w-full accent-teal-500"
             />
             <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
               <span>1h</span><span>6h</span><span>12h</span>
@@ -211,8 +211,8 @@ export default function FareEstimator() {
               onClick={() => setVehicleFilter(k)}
               className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-all border ${
                 vehicleFilter === k
-                  ? "bg-orange-600 text-white border-orange-600"
-                  : "border-border text-muted-foreground hover:border-orange-400"
+                  ? "bg-teal-600 text-white border-teal-600"
+                  : "border-border text-muted-foreground hover:border-teal-400"
               }`}
             >
               {RATES[k].icon} {RATES[k].label}
@@ -260,7 +260,7 @@ export default function FareEstimator() {
 
         {/* Disclaimer */}
         <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border pt-3">
-          <TrendingUp size={10} className="inline mr-1 text-orange-500" />
+          <TrendingUp size={10} className="inline mr-1 text-teal-500" />
           Estimates based on standard Malawi rates. Actual fares negotiated directly with operators.
           Fuel surcharges may apply during peak hours.
         </p>

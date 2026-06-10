@@ -7,7 +7,7 @@ const EMOJI: Record<string, string> = {
   "Corporate Transport":"🏢","Other":"🚘",
 };
 const GRAD = [
-  "from-orange-400 to-orange-600","from-blue-400 to-blue-600",
+  "from-teal-400 to-teal-600","from-blue-400 to-blue-600",
   "from-green-400 to-green-600","from-purple-400 to-purple-600",
   "from-pink-400 to-pink-600","from-teal-400 to-teal-600",
 ];
@@ -56,13 +56,13 @@ export function ServiceCard({ service: s }: { service: Service }) {
     <Link href={`/transport/${s.id}`}>
       <div className={`group bg-card border rounded-xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer ${
         isPremium  ? "border-yellow-400/50 shadow-yellow-500/5 shadow-md" :
-        isFeatured ? "border-orange-500/40 shadow-orange-500/5 shadow-md" :
+        isFeatured ? "border-teal-500/40 shadow-teal-500/5 shadow-md" :
         "border-card-border"
       }`}>
         {(isPremium || isFeatured) && (
           <div className={`text-white text-[10px] font-black px-3 py-1 text-center tracking-wider uppercase ${
             isPremium ? "bg-gradient-to-r from-yellow-500 to-amber-500"
-                      : "bg-gradient-to-r from-orange-600 to-orange-500"
+                      : "bg-gradient-to-r from-teal-600 to-teal-500"
           }`}>
             {isPremium ? "⭐ Premium Driver" : "⭐ Featured"}
           </div>
@@ -77,7 +77,7 @@ export function ServiceCard({ service: s }: { service: Service }) {
                   {photo ? <img src={photo} alt="" className="w-full h-full object-cover"/> : w.name.charAt(0)}
                 </div>
               ) : (
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/40 dark:to-orange-800/30 flex items-center justify-center text-2xl">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-100 to-teal-200 dark:from-teal-900/40 dark:to-teal-800/30 flex items-center justify-center text-2xl">
                   {EMOJI[vType] ?? "🚗"}
                 </div>
               )}
@@ -85,13 +85,13 @@ export function ServiceCard({ service: s }: { service: Service }) {
             </div>
 
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-black text-foreground group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors line-clamp-2 leading-snug mb-1">
+              <h3 className="text-sm font-black text-foreground group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors line-clamp-2 leading-snug mb-1">
                 {s.title}
               </h3>
               <div className="flex items-center gap-1 text-[11px] text-muted-foreground flex-wrap">
                 <MapPin size={9} className="shrink-0"/><span className="truncate">{s.location}</span>
                 {s.from_city && s.to_city && (
-                  <span className="text-orange-500 font-semibold shrink-0">· {s.from_city}→{s.to_city}</span>
+                  <span className="text-teal-500 font-semibold shrink-0">· {s.from_city}→{s.to_city}</span>
                 )}
               </div>
               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
@@ -139,7 +139,7 @@ export function ServiceCard({ service: s }: { service: Service }) {
                 {s.rating ? s.rating.toFixed(1) : "New"}{reviews > 0 && ` (${reviews})`}
               </span>
             </div>
-            <div className="text-sm font-black text-orange-600 dark:text-orange-400">{priceDisp}</div>
+            <div className="text-sm font-black text-teal-600 dark:text-teal-400">{priceDisp}</div>
           </div>
         </div>
 

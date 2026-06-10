@@ -4,7 +4,7 @@ import { AlertTriangle, X, Phone, MessageCircle, Share2, Shield, ChevronRight } 
 const EMERGENCY_CONTACTS = [
   { name: "Malawi Police",      number: "999",          icon: "🚔", color: "bg-blue-600" },
   { name: "Ambulance",          number: "998",          icon: "🚑", color: "bg-red-600" },
-  { name: "Fire Brigade",       number: "990",          icon: "🚒", color: "bg-orange-600" },
+  { name: "Fire Brigade",       number: "990",          icon: "🚒", color: "bg-teal-600" },
   { name: "TransportMW Support",number: "+265999626944",icon: "💬", color: "bg-green-600" },
 ];
 
@@ -194,11 +194,11 @@ export default function SOSOverlay({ tripId, variant = "float" }: SOSOverlayProp
                   <button
                     onClick={shareTrip}
                     disabled={shareLoading}
-                    className="w-full flex items-center justify-between gap-2 p-3.5 rounded-xl border border-border hover:border-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/10 transition-all active:scale-95"
+                    className="w-full flex items-center justify-between gap-2 p-3.5 rounded-xl border border-border hover:border-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/10 transition-all active:scale-95"
                   >
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                        <Share2 size={14} className="text-orange-600" />
+                      <div className="w-8 h-8 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+                        <Share2 size={14} className="text-teal-600" />
                       </div>
                       <div className="text-left">
                         <div className="text-xs font-black">

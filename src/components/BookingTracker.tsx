@@ -116,13 +116,13 @@ function QuickRating({ bookingId, listingId, reviewerToken, onDone }: {
         onChange={e => setComment(e.target.value)}
         placeholder="Optional: leave a comment..."
         rows={2}
-        className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none resize-none focus:border-orange-500 transition-all"
+        className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none resize-none focus:border-teal-500 transition-all"
       />
 
       <button
         onClick={submit}
         disabled={!rating || submitting}
-        className="w-full py-3 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-sm font-black transition-all active:scale-95 disabled:opacity-40"
+        className="w-full py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-black transition-all active:scale-95 disabled:opacity-40"
       >
         {submitting ? "Submitting..." : "Submit Rating"}
       </button>
@@ -245,7 +245,7 @@ export default function BookingTracker({ booking, onClose, onStatusChange }: Boo
             </div>
             <div className="ml-[2px] border-l-2 border-dashed border-border h-4" />
             <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+              <div className="w-1.5 h-1.5 rounded-full bg-teal-500" />
               <span className="text-sm font-semibold">{booking.to_location}</span>
             </div>
             <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border text-xs text-muted-foreground">
@@ -282,7 +282,7 @@ export default function BookingTracker({ booking, onClose, onStatusChange }: Boo
                       <div className="flex flex-col items-center">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
                           isDone ? "bg-green-500" :
-                          isActive ? "bg-orange-600 animate-pulse" :
+                          isActive ? "bg-teal-600 animate-pulse" :
                           "bg-muted"
                         }`}>
                           <StepIcon
@@ -302,7 +302,7 @@ export default function BookingTracker({ booking, onClose, onStatusChange }: Boo
                         <div className={`text-xs font-black ${isActive ? "text-foreground" : "text-foreground/80"}`}>
                           {step.label}
                           {isActive && (
-                            <span className="ml-2 text-[9px] bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 px-1.5 py-0.5 rounded-full font-bold">
+                            <span className="ml-2 text-[9px] bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 px-1.5 py-0.5 rounded-full font-bold">
                               NOW
                             </span>
                           )}

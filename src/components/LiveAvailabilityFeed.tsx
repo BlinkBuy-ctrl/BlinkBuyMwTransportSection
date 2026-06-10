@@ -146,7 +146,7 @@ export default function LiveAvailabilityFeed() {
         <div className="py-8 text-center">
           <div className="text-3xl mb-2">🚗</div>
           <p className="text-sm text-muted-foreground">No operators online right now</p>
-          <Link href="/post-transport" className="text-xs text-orange-500 mt-1 inline-block hover:underline">
+          <Link href="/post-transport" className="text-xs text-teal-500 mt-1 inline-block hover:underline">
             List your vehicle →
           </Link>
         </div>
@@ -156,14 +156,14 @@ export default function LiveAvailabilityFeed() {
             <Link
               key={op.id}
               href={`/transport/${op.id}`}
-              className={`flex items-center gap-2.5 p-2.5 rounded-xl border transition-all hover:border-orange-400/60 hover:bg-orange-50/50 dark:hover:bg-orange-900/10 active:scale-98 ${
+              className={`flex items-center gap-2.5 p-2.5 rounded-xl border transition-all hover:border-teal-400/60 hover:bg-teal-50/50 dark:hover:bg-teal-900/10 active:scale-98 ${
                 pulseId === op.id
                   ? "border-green-400 bg-green-50 dark:bg-green-900/10 scale-[1.02]"
                   : "border-border bg-background"
               }`}
             >
               {/* Vehicle type badge */}
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/40 dark:to-orange-800/30 flex items-center justify-center text-lg shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-100 to-teal-200 dark:from-teal-900/40 dark:to-teal-800/30 flex items-center justify-center text-lg shrink-0">
                 {VEHICLE_EMOJI[op.vehicle_type] ?? "🚗"}
               </div>
 
@@ -187,7 +187,7 @@ export default function LiveAvailabilityFeed() {
               </div>
 
               <div className="text-right shrink-0">
-                <div className="text-xs font-black text-orange-600 dark:text-orange-400">
+                <div className="text-xs font-black text-teal-600 dark:text-teal-400">
                   {op.price_display || formatMK(op.price)}
                 </div>
                 <div className="flex items-center justify-end gap-0.5 mt-0.5">
@@ -204,7 +204,7 @@ export default function LiveAvailabilityFeed() {
         <div className="px-4 pb-3 pt-1 border-t border-border">
           <Link
             href="/transport?isOnline=true"
-            className="flex items-center justify-center gap-1.5 text-xs text-orange-600 dark:text-orange-400 font-bold hover:underline"
+            className="flex items-center justify-center gap-1.5 text-xs text-teal-600 dark:text-teal-400 font-bold hover:underline"
           >
             <Zap size={11} /> View all online operators
           </Link>

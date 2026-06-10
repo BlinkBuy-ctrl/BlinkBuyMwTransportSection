@@ -99,7 +99,7 @@ export default function PremiumUpgrade({ listingId, listingTitle, onClose }: Pre
               <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3 text-xs text-amber-700 dark:text-amber-400 mb-5 text-left">
                 Send <strong>MK {selected.price.toLocaleString()}</strong> to <strong>{PAYMENT_NUMS[payment]}</strong> ({payment === "airtel" ? "Airtel Money" : "TNM Mpamba"}) and use the reference <strong>{ref}</strong>
               </div>
-              <button onClick={onClose} className="w-full py-3 bg-orange-600 hover:bg-orange-500 text-white rounded-xl font-black transition-all active:scale-95">
+              <button onClick={onClose} className="w-full py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-xl font-black transition-all active:scale-95">
                 Close
               </button>
             </div>
@@ -138,7 +138,7 @@ export default function PremiumUpgrade({ listingId, listingTitle, onClose }: Pre
                   {(["airtel","mpamba"] as const).map(m => (
                     <button key={m} onClick={() => setPayment(m)}
                       className={`py-2.5 rounded-xl border text-xs font-bold transition-all ${
-                        payment === m ? "border-orange-500 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300" : "border-border text-muted-foreground hover:border-orange-300"
+                        payment === m ? "border-teal-500 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300" : "border-border text-muted-foreground hover:border-teal-300"
                       }`}>
                       {m === "airtel" ? "📱 Airtel Money" : "📱 TNM Mpamba"}
                       <div className="text-[9px] font-mono mt-0.5">{PAYMENT_NUMS[m]}</div>
