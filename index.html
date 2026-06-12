@@ -6,7 +6,11 @@
     <title>TransportMW — Find Taxis, Motorcycles & Hire Cars in Malawi</title>
     <meta name="description" content="Malawi's trusted transport hub. Book taxis, motorcycles, minibuses, hire cars and airport transfers across Lilongwe, Blantyre, Mzuzu and beyond. No account needed." />
     <meta name="keywords" content="taxi Malawi, transport Lilongwe, hire car Blantyre, motorcycle Malawi, minibus Mzuzu, airport transfer Malawi, TransportMW" />
-    <meta name="theme-color" content="#0a1628" />
+
+    <!-- PWA theme — matches hsl(215,55%,10%) app header exactly -->
+    <meta name="theme-color" content="#0d1f3c" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#0d1f3c" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d1f3c" />
     <meta name="robots" content="index, follow" />
 
     <!-- PWA -->
@@ -19,33 +23,30 @@
     <meta name="apple-mobile-web-app-title" content="TransportMW" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
 
-    <!-- Open Graph -->
-    <meta property="og:title" content="TransportMW — Malawi's Ride Hub" />
-    <meta property="og:description" content="Find trusted taxis, motorcycles, hire cars & minibuses across Malawi. Book instantly — no account needed." />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="/opengraph.jpg" />
-    <meta property="og:url" content="https://transportmw.com" />
-    <meta property="og:locale" content="en_MW" />
+    <!-- Apple splash screens -->
+    <link rel="apple-touch-startup-image" href="/splash-2048x2732.png" media="(device-width:1024px) and (device-height:1366px) and (-webkit-device-pixel-ratio:2)" />
+    <link rel="apple-touch-startup-image" href="/splash-1668x2388.png" media="(device-width:834px) and (device-height:1194px) and (-webkit-device-pixel-ratio:2)" />
+    <link rel="apple-touch-startup-image" href="/splash-1170x2532.png" media="(device-width:390px) and (device-height:844px) and (-webkit-device-pixel-ratio:3)" />
+    <link rel="apple-touch-startup-image" href="/splash-1125x2436.png" media="(device-width:375px) and (device-height:812px) and (-webkit-device-pixel-ratio:3)" />
+    <link rel="apple-touch-startup-image" href="/splash-750x1334.png"  media="(device-width:375px) and (device-height:667px) and (-webkit-device-pixel-ratio:2)" />
 
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="TransportMW — Malawi's Ride Hub" />
+    <!-- Open Graph -->
+    <meta property="og:title"       content="TransportMW — Malawi's Ride Hub" />
+    <meta property="og:description" content="Find trusted taxis, motorcycles, hire cars & minibuses across Malawi. Book instantly — no account needed." />
+    <meta property="og:type"        content="website" />
+    <meta property="og:image"       content="/opengraph.jpg" />
+    <meta property="og:url"         content="https://transportmw.com" />
+    <meta property="og:locale"      content="en_MW" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content="TransportMW — Malawi's Ride Hub" />
     <meta name="twitter:description" content="Book taxis, motorcycles, hire cars across Malawi instantly." />
-    <meta name="twitter:image" content="/opengraph.jpg" />
+    <meta name="twitter:image"       content="/opengraph.jpg" />
 
     <!-- Structured Data -->
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "TransportMW",
-      "description": "Malawi's trusted transport booking platform",
-      "url": "https://transportmw.com",
-      "applicationCategory": "TravelApplication",
-      "operatingSystem": "Any",
-      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "MWK"},
-      "areaServed": {"@type": "Country", "name": "Malawi"}
-    }
+    {"@context":"https://schema.org","@type":"WebApplication","name":"TransportMW","description":"Malawi's trusted transport booking platform","url":"https://transportmw.com","applicationCategory":"TravelApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"MWK"},"areaServed":{"@type":"Country","name":"Malawi"}}
     </script>
 
     <!-- Fonts -->
@@ -54,12 +55,428 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900&display=swap" rel="stylesheet" />
 
     <style>
-      html, body { overscroll-behavior: none; background: #0a1628; }
+      html, body {
+        overscroll-behavior: none;
+        background: #0d1f3c;
+        margin: 0; padding: 0;
+      }
       #root { min-height: 100dvh; }
+
+      /* ═══════════════════════════════════════════
+         PWA SPLASH
+      ═══════════════════════════════════════════ */
+      #pwa-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: none; /* JS shows it only in standalone */
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(160deg, #0d1f3c 0%, #091525 55%, #050f1e 100%);
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        overflow: hidden;
+        opacity: 1;
+        transition: opacity 0.55s ease;
+      }
+      #pwa-splash.fade-out {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* ── Background floating dots ── */
+      .sp-dots { position: absolute; inset: 0; pointer-events: none; }
+      .sp-dot {
+        position: absolute;
+        width: 3px; height: 3px;
+        background: rgba(45,212,191,0.18);
+        border-radius: 50%;
+        animation: dotFloat 5s ease-in-out infinite;
+      }
+      @keyframes dotFloat {
+        0%,100% { transform: translateY(0) scale(1); opacity: 0.18; }
+        50%      { transform: translateY(-22px) scale(1.6); opacity: 0.45; }
+      }
+
+      /* ── Logo block ── */
+      .sp-logo {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 44px;
+        animation: spFadeUp 0.55s ease both;
+      }
+      .sp-icon {
+        width: 72px; height: 72px;
+        background: linear-gradient(135deg, #2dd4bf, #0d9488);
+        border-radius: 20px;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 0 0 8px rgba(45,212,191,0.1), 0 16px 48px rgba(45,212,191,0.3);
+      }
+      .sp-icon svg { width: 36px; height: 36px; fill: white; }
+      .sp-title {
+        font-size: 30px; font-weight: 900;
+        color: #fff; letter-spacing: -0.5px; line-height: 1;
+      }
+      .sp-sub {
+        font-size: 11px; font-weight: 600;
+        color: #2dd4bf; letter-spacing: 2.5px;
+        text-transform: uppercase; margin-top: -4px;
+      }
+
+      /* ── Road + bus section ── */
+      .sp-road-section {
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        height: 130px;
+      }
+
+      /* Road surface */
+      .sp-road {
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        height: 52px;
+        background: #152a47;
+        border-top: 2px solid #1e3a5f;
+      }
+
+      /* Centre dashes — scroll right to left to feel like road moving */
+      .sp-road-dashes {
+        position: absolute;
+        top: 50%;
+        left: 0; right: 0;
+        height: 4px;
+        margin-top: -2px;
+        overflow: hidden;
+      }
+      .sp-dash-strip {
+        display: flex;
+        gap: 20px;
+        /* wide enough to loop */
+        width: 200%;
+        animation: dashScroll 0.7s linear infinite;
+      }
+      .sp-dash {
+        flex-shrink: 0;
+        width: 40px; height: 4px;
+        background: rgba(45,212,191,0.45);
+        border-radius: 2px;
+      }
+      @keyframes dashScroll {
+        from { transform: translateX(0); }
+        to   { transform: translateX(-50%); }
+      }
+
+      /* Bus — positioned on top of the road, JS drives left position */
+      #sp-bus {
+        position: absolute;
+        bottom: 50px; /* sit on road surface */
+        left: -220px; /* starts off-screen left, JS sets this */
+        width: 200px;
+        height: auto;
+        filter: drop-shadow(0 6px 20px rgba(45,212,191,0.3));
+        /* subtle vertical bob */
+        animation: busBob 0.45s ease-in-out infinite alternate;
+        will-change: left;
+      }
+      @keyframes busBob {
+        from { transform: translateY(0px); }
+        to   { transform: translateY(-3px); }
+      }
+
+      /* Exhaust — anchored relative to bus via JS */
+      #sp-exhaust {
+        position: absolute;
+        bottom: 96px;
+        left: 0; /* JS keeps this = bus left - 14px */
+        display: flex;
+        gap: 5px;
+        align-items: flex-end;
+      }
+      .sp-puff {
+        width: 9px; height: 9px;
+        background: rgba(255,255,255,0.14);
+        border-radius: 50%;
+        animation: puffOut 0.9s ease-out infinite;
+      }
+      .sp-puff:nth-child(2) { animation-delay: 0.3s; width: 7px; height: 7px; }
+      .sp-puff:nth-child(3) { animation-delay: 0.6s; width: 5px; height: 5px; }
+      @keyframes puffOut {
+        0%   { opacity: 0.55; transform: translateX(0)   translateY(0)    scale(1); }
+        100% { opacity: 0;    transform: translateX(-20px) translateY(-16px) scale(2.2); }
+      }
+
+      /* ── Progress bar (synced with bus via JS) ── */
+      .sp-bar-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+        animation: spFadeUp 0.55s 0.15s ease both;
+        width: 80%;
+        max-width: 300px;
+      }
+      .sp-bar-track {
+        width: 100%;
+        height: 5px;
+        background: rgba(255,255,255,0.09);
+        border-radius: 99px;
+        overflow: hidden;
+        position: relative;
+      }
+      #sp-bar-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #2dd4bf, #14b8a6);
+        border-radius: 99px;
+        box-shadow: 0 0 10px rgba(45,212,191,0.7);
+        transition: width 0.08s linear;
+      }
+      /* Shimmer on bar */
+      #sp-bar-fill::after {
+        content: '';
+        position: absolute;
+        top: 0; right: 0;
+        width: 30px; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+        animation: barShimmer 1.2s ease-in-out infinite;
+      }
+      @keyframes barShimmer {
+        0%   { opacity: 0; }
+        50%  { opacity: 1; }
+        100% { opacity: 0; }
+      }
+
+      #sp-bar-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.4);
+        letter-spacing: 0.5px;
+      }
+
+      /* ── Powered by ── */
+      .sp-powered {
+        position: absolute;
+        bottom: 60px;
+        left: 0; right: 0;
+        text-align: center;
+        font-size: 11px;
+        color: rgba(255,255,255,0.3);
+        letter-spacing: 0.4px;
+        animation: spFadeUp 0.55s 0.3s ease both;
+      }
+      .sp-powered b { color: #2dd4bf; font-weight: 700; }
+
+      @keyframes spFadeUp {
+        from { opacity: 0; transform: translateY(14px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
     </style>
   </head>
   <body>
+
+    <!-- PWA SPLASH — only shown when app is installed (standalone) -->
+    <div id="pwa-splash">
+
+      <!-- Floating dots -->
+      <div class="sp-dots">
+        <div class="sp-dot" style="left:8%;top:18%;animation-delay:0s"></div>
+        <div class="sp-dot" style="left:22%;top:55%;animation-delay:0.8s"></div>
+        <div class="sp-dot" style="left:42%;top:30%;animation-delay:1.6s"></div>
+        <div class="sp-dot" style="left:60%;top:68%;animation-delay:0.4s"></div>
+        <div class="sp-dot" style="left:78%;top:22%;animation-delay:1.2s"></div>
+        <div class="sp-dot" style="left:88%;top:50%;animation-delay:0.6s"></div>
+        <div class="sp-dot" style="left:15%;top:78%;animation-delay:2.0s"></div>
+        <div class="sp-dot" style="left:50%;top:12%;animation-delay:1.0s"></div>
+        <div class="sp-dot" style="left:33%;top:85%;animation-delay:0.2s"></div>
+        <div class="sp-dot" style="left:70%;top:40%;animation-delay:1.4s"></div>
+      </div>
+
+      <!-- App logo -->
+      <div class="sp-logo">
+        <div class="sp-icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 16c0 .88.39 1.67 1 2.22V20a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h8v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm9 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM6 6h12v5H6V6z"/>
+          </svg>
+        </div>
+        <div class="sp-title">TransportMW</div>
+        <div class="sp-sub">Malawi's Ride Hub</div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="sp-bar-section">
+        <div class="sp-bar-track">
+          <div id="sp-bar-fill"></div>
+        </div>
+        <span id="sp-bar-label">Loading…</span>
+      </div>
+
+      <!-- Powered by Otechy -->
+      <div class="sp-powered">Powered by <b>Otechy</b></div>
+
+      <!-- Road strip with bus -->
+      <div class="sp-road-section">
+        <!-- Bus SVG -->
+        <svg id="sp-bus" viewBox="0 0 220 85" xmlns="http://www.w3.org/2000/svg">
+          <!-- Body -->
+          <rect x="8" y="12" width="196" height="58" rx="8" fill="#1e3a5f" stroke="#2dd4bf" stroke-width="1.5"/>
+          <!-- Roof teal bar -->
+          <rect x="8" y="12" width="196" height="11" rx="8" fill="#2dd4bf" opacity="0.85"/>
+          <!-- Windshield (front = right side, bus travels right) -->
+          <rect x="172" y="20" width="26" height="30" rx="4" fill="#0a1828" stroke="#2dd4bf" stroke-width="1"/>
+          <!-- Headlight -->
+          <rect x="198" y="30" width="6" height="7" rx="2" fill="#fbbf24"/>
+          <!-- Windows -->
+          <rect x="16"  y="22" width="28" height="20" rx="3" fill="#0a1828" stroke="#2dd4bf" stroke-width="1" opacity="0.9"/>
+          <rect x="52"  y="22" width="28" height="20" rx="3" fill="#0a1828" stroke="#2dd4bf" stroke-width="1" opacity="0.9"/>
+          <rect x="88"  y="22" width="28" height="20" rx="3" fill="#0a1828" stroke="#2dd4bf" stroke-width="1" opacity="0.9"/>
+          <rect x="124" y="22" width="28" height="20" rx="3" fill="#0a1828" stroke="#2dd4bf" stroke-width="1" opacity="0.9"/>
+          <!-- Door -->
+          <rect x="16" y="44" width="24" height="22" rx="3" fill="#152e4d" stroke="#2dd4bf" stroke-width="1" opacity="0.8"/>
+          <!-- Brand text -->
+          <text x="108" y="58" text-anchor="middle" fill="#2dd4bf" font-size="8.5" font-weight="700"
+                font-family="Inter,sans-serif" letter-spacing="1.2">TransportMW</text>
+          <!-- Wheels -->
+          <circle cx="44"  cy="74" r="12" fill="#0d1f3c" stroke="#2dd4bf" stroke-width="2"/>
+          <circle cx="44"  cy="74" r="5"  fill="#1e3a5f"/>
+          <line x1="44" y1="62" x2="44" y2="86" stroke="#2dd4bf" stroke-width="1.2" opacity="0.55"/>
+          <line x1="32" y1="74" x2="56" y2="74" stroke="#2dd4bf" stroke-width="1.2" opacity="0.55"/>
+
+          <circle cx="168" cy="74" r="12" fill="#0d1f3c" stroke="#2dd4bf" stroke-width="2"/>
+          <circle cx="168" cy="74" r="5"  fill="#1e3a5f"/>
+          <line x1="168" y1="62" x2="168" y2="86" stroke="#2dd4bf" stroke-width="1.2" opacity="0.55"/>
+          <line x1="156" y1="74" x2="180" y2="74" stroke="#2dd4bf" stroke-width="1.2" opacity="0.55"/>
+        </svg>
+
+        <!-- Exhaust puffs (left/back of bus) -->
+        <div id="sp-exhaust">
+          <div class="sp-puff"></div>
+          <div class="sp-puff"></div>
+          <div class="sp-puff"></div>
+        </div>
+
+        <!-- Road -->
+        <div class="sp-road">
+          <div class="sp-road-dashes">
+            <div class="sp-dash-strip">
+              <!-- 20 dashes × 2 for seamless loop -->
+              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
+              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
+              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
+              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
+              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
+              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
+              <div class="sp-dash"></div><div class="sp-dash"></div>
+              <!-- duplicate for loop -->
+              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
+              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
+              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
+              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
+              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
+              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
+              <div class="sp-dash"></div><div class="sp-dash"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /#pwa-splash -->
+
     <div id="root"></div>
+
+    <script>
+    (function () {
+      /* ── Only run in installed PWA (standalone) ── */
+      var isStandalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        window.navigator.standalone === true;
+
+      if (!isStandalone) return;
+
+      var splash   = document.getElementById('pwa-splash');
+      var barFill  = document.getElementById('sp-bar-fill');
+      var barLabel = document.getElementById('sp-bar-label');
+      var bus      = document.getElementById('sp-bus');
+      var exhaust  = document.getElementById('sp-exhaust');
+
+      splash.style.display = 'flex';
+
+      /* ─────────────────────────────────────────────
+         JOURNEY ANIMATION
+         Total duration: 3200ms
+         Bus travels from off-screen left (-busW px)
+         to off-screen right (screenW px),
+         in sync with bar filling 0 → 100%.
+         Road dashes animate via CSS (always scroll).
+      ───────────────────────────────────────────── */
+      var DURATION = 3200;   // ms total journey
+      var busW     = 200;    // approximate bus pixel width
+      var start    = null;
+
+      function ease(t) {
+        /* ease-in-out: slow start, cruise, then slows before finish */
+        return t < 0.5
+          ? 2 * t * t
+          : -1 + (4 - 2 * t) * t;
+      }
+
+      function tick(ts) {
+        if (!start) start = ts;
+        var elapsed = ts - start;
+        var raw     = Math.min(elapsed / DURATION, 1);   // 0 → 1 linear
+        var t       = ease(raw);                          // eased
+
+        /* ── Bar fill ── */
+        var pct = Math.round(t * 100);
+        barFill.style.width = pct + '%';
+
+        if (pct < 30)       barLabel.textContent = 'Starting engine…';
+        else if (pct < 60)  barLabel.textContent = 'On the road…';
+        else if (pct < 88)  barLabel.textContent = 'Almost there…';
+        else if (pct < 100) barLabel.textContent = 'Arriving…';
+        else                barLabel.textContent = 'Welcome!';
+
+        /* ── Bus position ──
+           Starts fully off-screen left: left = -busW
+           Ends fully off-screen right:  left = screenW
+           The bar track aligns with this travel range visually.
+        */
+        var screenW  = window.innerWidth;
+        var travelPx = screenW + busW;                    // total px to move
+        var leftPx   = -busW + t * travelPx;              // current left px
+        bus.style.left = leftPx + 'px';
+
+        /* Exhaust stays just behind (left of) bus rear */
+        exhaust.style.left = (leftPx - 16) + 'px';
+
+        /* ── Dash speed increases when bus goes faster ──
+           Faster in middle of journey (eased derivative peaks ~0.5)
+           We just drive CSS animation-duration dynamically */
+        var speed = 0.3 + (1 - Math.abs(raw - 0.5) * 2) * 0.5; // 0.3–0.8s range
+        var dashEl = document.querySelector('.sp-dash-strip');
+        if (dashEl) dashEl.style.animationDuration = (0.85 - speed * 0.5) + 's';
+
+        if (raw < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          /* Journey complete — fade out splash */
+          setTimeout(function () {
+            splash.classList.add('fade-out');
+            setTimeout(function () {
+              splash.style.display = 'none';
+            }, 600);
+          }, 200);
+        }
+      }
+
+      /* Small delay so fonts load before animation starts */
+      setTimeout(function () {
+        requestAnimationFrame(tick);
+      }, 200);
+    })();
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
