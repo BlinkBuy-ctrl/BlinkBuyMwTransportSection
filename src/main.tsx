@@ -5,7 +5,6 @@ import "./index.css";
 // Catch unhandled promise rejections — prevents silent freezes
 window.addEventListener("unhandledrejection", (e) => {
   console.error("[Unhandled]", e.reason);
-  // Prevent the error from silently killing async chains
   e.preventDefault();
 });
 
