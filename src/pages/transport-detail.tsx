@@ -1,484 +1,503 @@
-import { useState, useEffect } from "react";
-import { Link, useParams } from "wouter";
+import { useState, useEffect, useCallback } from "react";
+import { useRoute, useLocation } from "wouter";
 import {
-  MapPin, Star, MessageCircle, Phone,
-  ArrowLeft, Shield, Car, Calendar, Banknote,
-  Zap, Users, Trash2, Edit3, AlertTriangle, Share2, ChevronDown, ChevronUp
+  MapPin, Star, Phone, MessageCircle, Shield, ChevronLeft,
+  Zap, Flag, Share2, ChevronRight, Calendar, Users,
+  CheckCircle2, ImageOff, Loader2, Tag, Eye, X
 } from "lucide-react";
-import { supabase, authedClient } from "@/lib/supabase";
-import { getOrCreateIdentity, isListingOwner } from "@/lib/identity";
-import BookingTracker, { type BookingInfo, type BookingStatus } from "@/components/BookingTracker";
-import SOSOverlay from "@/components/SOSOverlay";
-import TrustBadges from "@/components/TrustBadges";
-import ReportListing from "@/components/ReportListing";
-import ShareListing from "@/components/ShareListing";
-import { InteractiveRating } from "@/components/StarRating";
+import { supabase } from "@/lib/supabase";
+import { fetchListingImages } from "@/hooks/useListingImages";
+import type { ListingImage } from "@/hooks/useListingImages";
 
-const PAYMENT_OPTS = [
-  { id:"airtel",  label:"Airtel Money", color:"bg-red-600",    icon:"📱", num:"0999626944" },
-  { id:"mpamba",  label:"TNM Mpamba",   color:"bg-yellow-500", icon:"📱", num:"0888712272" },
-  { id:"cash",    label:"Cash",         color:"bg-green-600",  icon:"💵", num:"" },
-];
-
-function formatMK(n: number|null|undefined) {
-  if (!n) return "Negotiable";
-  return `MK ${n.toLocaleString()}`;
-}
-
-const VEHICLE_EMOJI: Record<string,string> = {
+const EMOJI: Record<string,string> = {
   "Taxi":"🚕","Motorcycle":"🏍️","Minibus":"🚌","Shuttle":"🚐","Hire Car":"🚗",
-  "Airport Transfer":"✈️","Cargo / Delivery":"🚛","School Transport":"🏫","Other":"🚘"
+  "Airport Transfer":"✈️","Cargo / Delivery":"🚛","School Transport":"🏫",
+  "Corporate Transport":"🏢","Other":"🚘",
 };
 
+interface Listing {
+  id:string; title:string; description?:string; vehicle_type:string;
+  location:string; from_city?:string; to_city?:string; covers_other_routes?:boolean;
+  price?:number|null; price_display?:string|null; price_type?:string|null;
+  is_online?:boolean; is_premium?:boolean; is_featured?:boolean; is_verified?:boolean;
+  rating?:number; review_count?:number; view_count?:number;
+  tags?:string[]; whatsapp?:string; phone?:string; thumbnail_url?:string|null;
+}
+interface Review {
+  id:string; rating:number; comment?:string; reviewer_name?:string; created_at:string;
+}
+
+// ── Gallery ──────────────────────────────────────────────────────────────────
+function Gallery({ images, vehicleType }: { images:ListingImage[]; vehicleType:string }) {
+  const [cur, setCur]       = useState(0);
+  const [lightbox, setLb]   = useState(false);
+
+  if (!images.length) return (
+    <div className="w-full h-52 bg-gradient-to-br from-card to-muted rounded-2xl flex flex-col items-center justify-center gap-2 border border-card-border">
+      <span className="text-5xl">{EMOJI[vehicleType] ?? "🚗"}</span>
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <ImageOff size={11}/> No photos yet
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      <div className="relative w-full rounded-2xl overflow-hidden bg-black" style={{ aspectRatio:"16/9" }}>
+        <img src={images[cur].url} alt={`photo ${cur+1}`}
+          className="w-full h-full object-cover cursor-zoom-in" onClick={() => setLb(true)}/>
+        <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/50 to-transparent pointer-events-none"/>
+
+        {images.length > 1 && <>
+          <button onClick={() => setCur(i => (i-1+images.length)%images.length)}
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white hover:bg-black/70 transition-all active:scale-95">
+            <ChevronLeft size={16}/>
+          </button>
+          <button onClick={() => setCur(i => (i+1)%images.length)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white hover:bg-black/70 transition-all active:scale-95">
+            <ChevronRight size={16}/>
+          </button>
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+            {images.map((_,i) => (
+              <button key={i} onClick={() => setCur(i)}
+                className={`rounded-full transition-all ${i===cur?"w-4 h-2 bg-white":"w-2 h-2 bg-white/50"}`}/>
+            ))}
+          </div>
+        </>}
+
+        <div className="absolute top-2 right-2 bg-black/50 backdrop-blur text-white text-[10px] font-bold px-2 py-1 rounded-full">
+          {cur+1}/{images.length}
+        </div>
+      </div>
+
+      {images.length > 1 && (
+        <div className="flex gap-2 mt-2">
+          {images.map((img,i) => (
+            <button key={img.id} onClick={() => setCur(i)}
+              className={`w-16 h-12 rounded-xl overflow-hidden border-2 transition-all ${i===cur?"border-teal-500":"border-transparent opacity-60 hover:opacity-100"}`}>
+              <img src={img.url} alt="" className="w-full h-full object-cover"/>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {lightbox && (
+        <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center" onClick={() => setLb(false)}>
+          <img src={images[cur].url} alt="" className="max-w-full max-h-full object-contain p-4"/>
+          <button className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20">
+            <X size={16}/>
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
+function Stars({ rating, size=13 }: { rating:number; size?:number }) {
+  return (
+    <div className="flex gap-0.5">
+      {[1,2,3,4,5].map(i => (
+        <Star key={i} size={size} className={i<=Math.round(rating)?"fill-amber-400 text-amber-400":"fill-muted text-muted"}/>
+      ))}
+    </div>
+  );
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────
 export default function TransportDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const [listing, setListing]           = useState<any>(null);
-  const [reviews, setReviews]           = useState<any[]>([]);
-  const [loading, setLoading]           = useState(true);
-  const [isOwner, setIsOwner]           = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState(false);
-  const [deleting, setDeleting]         = useState(false);
-  const [showBooking, setShowBooking]   = useState(false);
-  const [showRating, setShowRating]     = useState(false);
-  const [bookingLoading, setBookingLoading] = useState(false);
-  const [bookingError, setBookingError] = useState("");
-  const [activeBooking, setActiveBooking] = useState<BookingInfo|null>(null);
-  const [visible, setVisible]           = useState(false);
+  const [, params]    = useRoute("/transport/:id");
+  const [, setLoc]    = useLocation();
+  const id            = params?.id;
 
-  const [booking, setBooking] = useState({
-    from:"", to:"", date:"", time:"",
-    tripType:"one-way" as "one-way"|"round-trip",
-    passengers:"1", payment:"airtel", notes:"", name:"", phone:""
-  });
+  const [listing, setListing]   = useState<Listing|null>(null);
+  const [images, setImages]     = useState<ListingImage[]>([]);
+  const [reviews, setReviews]   = useState<Review[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-  useEffect(() => {
+  // Booking form
+  const [showBook, setShowBook]   = useState(false);
+  const [bFrom, setBFrom]         = useState("");
+  const [bTo, setBTo]             = useState("");
+  const [bDate, setBDate]         = useState("");
+  const [bName, setBName]         = useState("");
+  const [bPhone, setBPhone]       = useState("");
+  const [bPax, setBPax]           = useState("1");
+  const [bLoading, setBLoading]   = useState(false);
+  const [bDone, setBDone]         = useState(false);
+  const [bError, setBError]       = useState("");
+
+  // Review form
+  const [showReview, setShowReview]   = useState(false);
+  const [rRating, setRRating]         = useState(5);
+  const [rComment, setRComment]       = useState("");
+  const [rName, setRName]             = useState("");
+  const [rLoading, setRLoading]       = useState(false);
+  const [rDone, setRDone]             = useState(false);
+  const [rError, setRError]           = useState("");
+
+  const load = useCallback(async () => {
     if (!id) return;
-    let mounted = true;
-    (async () => {
-      try {
-        const [{ data: lData, error: lErr }, { data: rData }] = await Promise.all([
-          supabase.from("listings").select("*").eq("id", id).maybeSingle(),
-          supabase.from("reviews").select("*").eq("listing_id", id).order("created_at", { ascending:false }),
-        ]);
-        if (!mounted) return;
-        if (lErr) console.error("[TransportMW] listing fetch error:", lErr.message);
-        setListing(lData ?? null);
-        setReviews(rData ?? []);
-        setIsOwner(isListingOwner(lData?.operator_token));
-        if (lData) supabase.rpc("increment_listing_views", { p_listing_id: id }).catch(()=>{});
-      } catch (e) {
-        console.error("[TransportMW] detail page error:", e);
-      } finally {
-        if (mounted) { setLoading(false); setTimeout(() => setVisible(true), 50); }
-      }
-    })();
-    return () => { mounted = false; };
+    setLoading(true);
+    const [lRes, imgs, rRes] = await Promise.all([
+      supabase.from("listings").select("*").eq("id",id).eq("status","active").maybeSingle(),
+      fetchListingImages(id),
+      supabase.from("reviews").select("*").eq("listing_id",id).order("created_at",{ascending:false}).limit(20),
+    ]);
+    if (!lRes.data) { setNotFound(true); setLoading(false); return; }
+    setListing(lRes.data as Listing);
+    setImages(imgs);
+    setReviews((rRes.data??[]) as Review[]);
+    supabase.rpc("increment_listing_views",{p_listing_id:id}).then(()=>{});
+    setLoading(false);
   }, [id]);
 
-  const handleDelete = async () => {
-    setDeleting(true);
-    const identity = await getOrCreateIdentity();
-    await authedClient(identity.token).from("listings").update({ status:"deleted" })
-      .eq("id", listing.id).eq("operator_token", identity.token);
-    window.location.href = "/dashboard";
+  useEffect(() => { load(); }, [load]);
+
+  const submitBooking = async () => {
+    if (!listing) return;
+    if (!bFrom.trim()||!bTo.trim()||!bName.trim()||!bPhone.trim()) {
+      setBError("Please fill in all required fields."); return;
+    }
+    setBLoading(true); setBError("");
+    try {
+      const token = localStorage.getItem("operator_token") ?? crypto.randomUUID();
+      const { error } = await supabase.from("bookings").insert({
+        listing_id: listing.id, booker_token: token,
+        booker_name: bName, booker_phone: bPhone,
+        from_location: bFrom, to_location: bTo,
+        trip_date: bDate||null, passengers: Number(bPax),
+        payment_method: "cash", status: "requesting",
+      });
+      if (error) throw new Error(error.message);
+      setBDone(true);
+    } catch (e:any) { setBError(e.message??"Booking failed."); }
+    finally { setBLoading(false); }
   };
 
-  const handleBooking = async () => {
-    if (!booking.from || !booking.to) { setBookingError("Please enter pickup and destination"); return; }
-    setBookingError(""); setBookingLoading(true);
+  const submitReview = async () => {
+    if (!listing) return;
+    setRLoading(true); setRError("");
     try {
-      const identity = await getOrCreateIdentity();
-      const { data, error } = await authedClient(identity.token).from("bookings").insert({
-        listing_id: listing.id, booker_token: identity.token,
-        booker_name: booking.name || "Anonymous", booker_phone: booking.phone || null,
-        from_location: booking.from, to_location: booking.to,
-        trip_date: booking.date || null, trip_time: booking.time || null,
-        trip_type: booking.tripType, passengers: Number(booking.passengers),
-        payment_method: booking.payment, notes: booking.notes || null, status: "requesting",
-      }).select().single();
-      if (error) throw new Error(error.message);
-      setShowBooking(false);
-      setActiveBooking({
-        id: data.id, listing_id: listing.id,
-        from_location: data.from_location, to_location: data.to_location,
-        status: data.status as BookingStatus, booker_token: identity.token,
-        trip_date: data.trip_date, trip_time: data.trip_time,
-        passengers: data.passengers, payment_method: data.payment_method,
-        listing: { title: listing.title, vehicle_type: listing.vehicle_type,
-          whatsapp: listing.whatsapp, phone: listing.phone,
-          price_display: listing.price_display, price: listing.price }
+      const token = localStorage.getItem("operator_token") ?? crypto.randomUUID();
+      const { error } = await supabase.from("reviews").insert({
+        listing_id: listing.id, reviewer_token: token,
+        reviewer_name: rName.trim()||"Anonymous",
+        rating: rRating, comment: rComment.trim()||null,
       });
-    } catch (e: any) {
-      setBookingError(e.message || "Booking failed. Please try again.");
-    } finally { setBookingLoading(false); }
+      if (error) {
+        if (error.code==="23505") throw new Error("You've already reviewed this listing.");
+        throw new Error(error.message);
+      }
+      setRDone(true); load();
+    } catch (e:any) { setRError(e.message??"Could not submit review."); }
+    finally { setRLoading(false); }
+  };
+
+  const share = () => {
+    if (navigator.share && listing)
+      navigator.share({title:listing.title, url:window.location.href}).catch(()=>{});
+    else
+      navigator.clipboard?.writeText(window.location.href);
   };
 
   if (loading) return (
-    <div className="max-w-2xl mx-auto px-4 pt-6 pb-20 space-y-4">
-      <div className="h-4 w-24 bg-muted rounded-lg animate-pulse"/>
-      <div className="h-52 bg-muted rounded-3xl animate-pulse"/>
-      <div className="h-32 bg-muted rounded-3xl animate-pulse"/>
-      <div className="h-24 bg-muted rounded-3xl animate-pulse"/>
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <Loader2 size={32} className="animate-spin text-teal-500"/>
     </div>
   );
 
-  if (!listing) return (
-    <div className="text-center py-24">
-      <div className="text-5xl mb-4">🚗</div>
-      <p className="text-muted-foreground mb-4 font-medium">Listing not found or unavailable</p>
-      <Link href="/transport" className="text-teal-500 text-sm font-bold hover:underline">← Back to search</Link>
+  if (notFound||!listing) return (
+    <div className="max-w-md mx-auto px-4 pt-20 text-center">
+      <div className="text-5xl mb-4">🚫</div>
+      <h2 className="text-xl font-black mb-2">Listing Not Found</h2>
+      <p className="text-sm text-muted-foreground mb-6">This listing may have been removed.</p>
+      <button onClick={() => setLoc("/transport")}
+        className="px-5 py-2.5 bg-teal-600 text-white rounded-xl text-sm font-black hover:bg-teal-500 transition-all active:scale-95">
+        Browse Listings
+      </button>
     </div>
   );
 
-  const priceDisplay = listing.price_display || formatMK(listing.price);
-  const memberSince  = listing.created_at
-    ? new Date(listing.created_at).toLocaleDateString("en-MW", { month:"short", year:"numeric" })
-    : undefined;
+  const priceDisp = listing.price_display ?? (listing.price ? `MK ${Number(listing.price).toLocaleString()}` : "Negotiable");
+  const rating    = listing.rating ?? 0;
+  const revCount  = listing.review_count ?? 0;
 
   return (
-    <div
-      className="max-w-2xl mx-auto px-4 pt-4 pb-36"
-      style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)", transition: "all 300ms ease" }}
-    >
-      {activeBooking && (
-        <BookingTracker booking={activeBooking} onClose={() => setActiveBooking(null)}
-          onStatusChange={s => setActiveBooking(prev => prev ? {...prev, status:s} : null)}/>
-      )}
+    <div className="max-w-lg mx-auto px-4 pt-4 pb-32">
 
-      <Link href="/transport" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-5 transition-colors font-medium">
-        <ArrowLeft size={15}/> All Drivers
-      </Link>
-
-      {/* Owner banner */}
-      {isOwner && (
-        <div className="flex items-center gap-2 mb-4 p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-2xl">
-          <Shield size={14} className="text-amber-600 shrink-0"/>
-          <span className="text-xs text-amber-700 dark:text-amber-400 font-bold flex-1">You own this listing</span>
-          <Link href="/dashboard" className="flex items-center gap-1 text-xs text-teal-600 font-black hover:underline">
-            <Edit3 size={11}/> Manage
-          </Link>
-          {!deleteConfirm ? (
-            <button onClick={() => setDeleteConfirm(true)} className="flex items-center gap-1 text-xs text-red-600 font-black hover:underline">
-              <Trash2 size={11}/> Delete
-            </button>
-          ) : (
-            <div className="flex gap-1.5">
-              <button onClick={() => setDeleteConfirm(false)} className="text-xs text-muted-foreground">Cancel</button>
-              <button onClick={handleDelete} disabled={deleting} className="text-xs text-red-600 font-black">
-                {deleting ? "…" : "Confirm"}
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── DRIVER HERO CARD ────────────────────────────────────────── */}
-      <div className="bg-card border border-card-border rounded-3xl overflow-hidden mb-4">
-        {/* Top gradient banner */}
-        <div className="bg-gradient-to-br from-teal-600 to-teal-800 px-5 pt-5 pb-8 relative">
-          {listing.is_online && (
-            <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-green-500/20 border border-green-400/30 rounded-full px-2.5 py-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"/>
-              <span className="text-[10px] font-black text-green-300">LIVE</span>
-            </div>
-          )}
-          <div className="flex items-start gap-4">
-            <div className="w-20 h-20 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center text-4xl shrink-0 backdrop-blur-sm">
-              {VEHICLE_EMOJI[listing.vehicle_type] ?? "🚗"}
-            </div>
-            <div className="flex-1 min-w-0 pt-1">
-              <h1 className="text-lg font-black text-white leading-snug mb-1">{listing.title}</h1>
-              <div className="flex items-center gap-1.5 text-teal-200 text-xs mb-2">
-                <MapPin size={11}/>{listing.location}
-                {listing.from_city && listing.to_city && (
-                  <span className="font-bold">· {listing.from_city} → {listing.to_city}</span>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {listing.is_premium && (
-                  <span className="text-[10px] font-black bg-yellow-400/20 text-yellow-200 border border-yellow-400/30 px-2 py-0.5 rounded-full">⭐ Premium</span>
-                )}
-                {listing.covers_other_routes && (
-                  <span className="text-[10px] font-bold bg-white/15 text-white/80 px-2 py-0.5 rounded-full">Flexible Routes</span>
-                )}
-                {listing.is_verified && (
-                  <span className="flex items-center gap-0.5 text-[10px] font-bold bg-white/15 text-white/80 px-2 py-0.5 rounded-full">
-                    <Shield size={9}/> Verified
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats strip */}
-        <div className="grid grid-cols-3 divide-x divide-border/50 -mt-4 mx-4 bg-card border border-card-border rounded-2xl relative z-10 shadow-sm">
-          <div className="text-center px-2 py-3">
-            <div className="text-xl font-black text-foreground">{listing.rating?.toFixed(1) || "—"}</div>
-            <div className="flex justify-center my-0.5">
-              {[1,2,3,4,5].map(s => (
-                <Star key={s} size={9} className={s <= Math.round(listing.rating||0) ? "fill-amber-400 text-amber-400" : "fill-muted text-muted"}/>
-              ))}
-            </div>
-            <div className="text-[10px] text-muted-foreground">{listing.review_count || reviews.length} reviews</div>
-          </div>
-          <div className="text-center px-2 py-3">
-            <div className="text-xl font-black text-foreground">{listing.view_count || 0}</div>
-            <div className="text-[10px] text-muted-foreground mt-1">Views</div>
-          </div>
-          <div className="text-center px-2 py-3">
-            <div className="text-base font-black text-teal-600 dark:text-teal-400 leading-tight">{priceDisplay}</div>
-            <div className="text-[10px] text-muted-foreground mt-1">Starting from</div>
-          </div>
-        </div>
-
-        <div className="px-5 py-4">
-          <TrustBadges isVerified={listing.is_verified} isPremium={listing.is_premium}
-            rating={listing.rating} reviewCount={listing.review_count} memberSince={memberSince}/>
-        </div>
-      </div>
-
-      {/* About */}
-      {listing.description && (
-        <div className="bg-card border border-card-border rounded-2xl p-4 mb-4">
-          <h2 className="text-sm font-black mb-2">About This Driver</h2>
-          <p className="text-sm text-muted-foreground leading-relaxed">{listing.description}</p>
-          {listing.tags?.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-3">
-              {listing.tags.map((t: string) => (
-                <span key={t} className="text-[10px] bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 border border-teal-100 dark:border-teal-800/30 px-2.5 py-1 rounded-full font-semibold">{t}</span>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Payment */}
-      <div className="bg-card border border-card-border rounded-2xl p-4 mb-4">
-        <h2 className="text-sm font-black mb-3 flex items-center gap-1.5"><Banknote size={14} className="text-green-500"/> Accepted Payments</h2>
-        <div className="flex gap-2 flex-wrap">
-          {PAYMENT_OPTS.map(p => (
-            <span key={p.id} className={`${p.color} text-white text-[11px] font-bold px-3 py-1.5 rounded-full`}>
-              {p.icon} {p.label}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* Reviews section */}
-      <div className="bg-card border border-card-border rounded-2xl p-4 mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-black flex items-center gap-1.5">
-            <Star size={14} className="text-amber-400 fill-amber-400"/> Reviews ({reviews.length})
-          </h2>
-          {!isOwner && (
-            <button
-              onClick={() => setShowRating(!showRating)}
-              className="flex items-center gap-1 text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline transition-all">
-              {showRating ? <><ChevronUp size={13}/> Hide</> : <><Star size={12}/> Rate Driver</>}
-            </button>
-          )}
-        </div>
-
-        {/* Interactive rating widget */}
-        {showRating && !isOwner && (
-          <div className="bg-teal-50/50 dark:bg-teal-900/10 border border-teal-200/50 dark:border-teal-800/30 rounded-2xl p-4 mb-4 animate-in slide-in-from-top-2 duration-200">
-            <p className="text-xs font-black text-foreground mb-3">Rate your experience with this driver</p>
-            <InteractiveRating
-              listingId={listing.id}
-              onSubmitted={(r, c) => {
-                setShowRating(false);
-                setReviews(prev => [{
-                  id: Date.now(), reviewer_name: "You", rating: r,
-                  comment: c, created_at: new Date().toISOString()
-                }, ...prev]);
-              }}
-            />
-          </div>
-        )}
-
-        {reviews.length > 0 ? (
-          <div className="space-y-3">
-            {reviews.slice(0,5).map((r: any) => (
-              <div key={r.id} className="flex gap-3 pb-3 border-b border-border/40 last:border-0 last:pb-0">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-xs font-black text-white shrink-0">
-                  {(r.reviewer_name||"A").charAt(0).toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-1 mb-0.5">
-                    <span className="text-xs font-bold">{r.reviewer_name||"Anonymous"}</span>
-                    <div className="flex">
-                      {[1,2,3,4,5].map(s => (
-                        <Star key={s} size={10} className={s <= r.rating ? "fill-amber-400 text-amber-400" : "fill-muted text-muted"}/>
-                      ))}
-                    </div>
-                  </div>
-                  {r.comment && <p className="text-xs text-muted-foreground leading-relaxed">{r.comment}</p>}
-                  <p className="text-[10px] text-muted-foreground/50 mt-0.5">
-                    {new Date(r.created_at).toLocaleDateString("en-MW",{month:"short",day:"numeric",year:"numeric"})}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-6">
-            <div className="text-3xl mb-2">⭐</div>
-            <p className="text-xs text-muted-foreground">No reviews yet — be the first!</p>
-            {!isOwner && !showRating && (
-              <button onClick={() => setShowRating(true)}
-                className="mt-2 text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline">
-                Write a review
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Safety */}
-      <div className="flex items-start gap-2.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-3.5 mb-4">
-        <AlertTriangle size={14} className="text-blue-600 dark:text-blue-400 shrink-0 mt-0.5"/>
-        <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
-          Always confirm the driver's identity and vehicle plate before boarding. Share your trip with a trusted contact.
-        </p>
-      </div>
-
-      {/* Share + Report */}
-      <div className="flex items-center justify-between mb-4 px-1">
-        <ShareListing listingId={listing.id} title={listing.title}
-          priceDisplay={listing.price_display} location={listing.location} vehicleType={listing.vehicle_type}/>
-        {!isOwner && <ReportListing listingId={listing.id} listingTitle={listing.title}/>}
-      </div>
-
-      {/* BOOKING FORM */}
-      {showBooking && (
-        <div className="bg-card border border-teal-500/30 rounded-2xl p-4 mb-4 animate-in slide-in-from-bottom-4 duration-200">
-          <h2 className="text-sm font-black mb-4 flex items-center gap-1.5">
-            <Calendar size={14} className="text-teal-500"/> Book This Driver
-          </h2>
-
-          <div className="flex gap-2 mb-3">
-            {(["one-way","round-trip"] as const).map(t => (
-              <button key={t} onClick={() => setBooking(b => ({...b, tripType:t}))}
-                className={`flex-1 py-2.5 rounded-xl text-xs font-bold border transition-all ${
-                  booking.tripType === t
-                    ? "bg-teal-600 border-teal-600 text-white shadow-md shadow-teal-500/20"
-                    : "border-border text-muted-foreground hover:border-teal-400"
-                }`}>{t === "one-way" ? "One Way" : "Round Trip"}</button>
-            ))}
-          </div>
-
-          <div className="space-y-2.5">
-            <div className="bg-background border border-input rounded-xl overflow-hidden">
-              <div className="flex items-center gap-2 px-3 py-3 border-b border-border/50">
-                <div className="w-2.5 h-2.5 rounded-full bg-green-400 shrink-0"/>
-                <input value={booking.from} onChange={e => setBooking(b=>({...b,from:e.target.value}))}
-                  placeholder="Pickup location"
-                  className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"/>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-3">
-                <div className="w-2.5 h-2.5 rounded-full bg-teal-400 shrink-0"/>
-                <input value={booking.to} onChange={e => setBooking(b=>({...b,to:e.target.value}))}
-                  placeholder="Destination"
-                  className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"/>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-[10px] text-muted-foreground font-black uppercase tracking-wide mb-1 block">Date</label>
-                <input type="date" value={booking.date} onChange={e => setBooking(b=>({...b,date:e.target.value}))}
-                  min={new Date().toISOString().split("T")[0]}
-                  className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-teal-500"/>
-              </div>
-              <div>
-                <label className="text-[10px] text-muted-foreground font-black uppercase tracking-wide mb-1 block">Time</label>
-                <input type="time" value={booking.time} onChange={e => setBooking(b=>({...b,time:e.target.value}))}
-                  className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-teal-500"/>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-[10px] text-muted-foreground font-black uppercase tracking-wide mb-1 block">Passengers</label>
-                <select value={booking.passengers} onChange={e => setBooking(b=>({...b,passengers:e.target.value}))}
-                  className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-teal-500">
-                  {["1","2","3","4","5","6","7","8+"].map(n => <option key={n}>{n}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-[10px] text-muted-foreground font-black uppercase tracking-wide mb-1 block">Your Name</label>
-                <input value={booking.name} onChange={e => setBooking(b=>({...b,name:e.target.value}))}
-                  placeholder="Optional"
-                  className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-teal-500"/>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-[10px] text-muted-foreground font-black uppercase tracking-wide mb-1.5 block">Payment Method</label>
-              <div className="grid grid-cols-3 gap-1.5">
-                {PAYMENT_OPTS.map(p => (
-                  <button key={p.id} onClick={() => setBooking(b=>({...b,payment:p.id}))}
-                    className={`flex flex-col items-center gap-1 py-3 rounded-xl border text-xs font-bold transition-all ${
-                      booking.payment === p.id
-                        ? "border-teal-500 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 shadow-md shadow-teal-500/10"
-                        : "border-border text-muted-foreground hover:border-teal-300"
-                    }`}>
-                    <span className="text-lg">{p.icon}</span>
-                    <span className="text-[10px] leading-tight text-center">{p.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <textarea value={booking.notes} onChange={e => setBooking(b=>({...b,notes:e.target.value}))}
-              placeholder="Luggage, special instructions, landmarks..." rows={2}
-              className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none resize-none focus:border-teal-500"/>
-          </div>
-
-          {bookingError && (
-            <div className="mt-3 text-xs text-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-3 py-2">
-              {bookingError}
-            </div>
-          )}
-
-          <div className="flex gap-2 mt-4">
-            <button onClick={() => setShowBooking(false)}
-              className="flex-1 py-3 rounded-xl border border-border text-sm text-muted-foreground hover:bg-muted transition-all">
-              Cancel
-            </button>
-            <button onClick={handleBooking} disabled={bookingLoading}
-              className="flex-1 py-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-sm font-black transition-all active:scale-95 disabled:opacity-60 shadow-lg shadow-teal-500/20">
-              {bookingLoading ? "Sending…" : "Confirm Booking"}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Sticky CTA */}
-      <div className="fixed bottom-14 lg:bottom-0 left-0 right-0 bg-background/95 backdrop-blur border-t border-border px-4 py-3 z-40">
-        <div className="max-w-2xl mx-auto flex gap-2">
-          {listing.phone && (
-            <a href={`tel:+265${listing.phone}`}
-              className="w-12 h-12 rounded-xl border border-border flex items-center justify-center text-foreground hover:bg-muted transition-all active:scale-95 shrink-0">
-              <Phone size={17}/>
-            </a>
-          )}
-          {listing.whatsapp && (
-            <a href={`https://wa.me/265${listing.whatsapp}?text=Hi, I found you on TransportMW. I'd like to book a ride.`}
-              target="_blank" rel="noopener noreferrer"
-              className="flex items-center justify-center gap-1.5 flex-1 py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white text-sm font-black transition-all active:scale-95">
-              <MessageCircle size={15}/> WhatsApp
-            </a>
-          )}
-          <button onClick={() => setShowBooking(b => !b)}
-            className="flex items-center justify-center gap-1.5 flex-1 py-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-sm font-black transition-all active:scale-95 shadow-lg shadow-teal-500/20">
-            <Calendar size={15}/> {showBooking ? "Hide" : "Book Now"}
+      {/* Back + actions */}
+      <div className="flex items-center justify-between mb-4">
+        <button onClick={() => setLoc("/transport")}
+          className="flex items-center gap-1 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
+          <ChevronLeft size={16}/> Back
+        </button>
+        <div className="flex gap-2">
+          <button onClick={share} className="p-2 rounded-xl border border-border hover:bg-muted transition-all active:scale-95">
+            <Share2 size={15}/>
+          </button>
+          <button onClick={() => setLoc(`/report?listing=${listing.id}`)}
+            className="p-2 rounded-xl border border-border hover:bg-muted hover:text-red-500 transition-all active:scale-95 text-muted-foreground">
+            <Flag size={15}/>
           </button>
         </div>
       </div>
 
-      <SOSOverlay tripId={id}/>
+      {/* ── Gallery ── */}
+      <div className="mb-4">
+        <Gallery images={images} vehicleType={listing.vehicle_type}/>
+      </div>
+
+      {/* Premium ribbon */}
+      {(listing.is_premium||listing.is_featured) && (
+        <div className={`flex items-center justify-center gap-1.5 py-1.5 text-[10px] font-black tracking-widest uppercase text-white rounded-xl mb-3 ${
+          listing.is_premium
+            ? "bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-500"
+            : "bg-gradient-to-r from-teal-600 to-teal-500"
+        }`}>
+          ⭐ {listing.is_premium ? "Premium Driver" : "Featured Listing"}
+        </div>
+      )}
+
+      {/* Title */}
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-2xl">{EMOJI[listing.vehicle_type]??"🚗"}</span>
+            <h1 className="text-xl font-black leading-tight">{listing.title}</h1>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
+            <MapPin size={11} className="text-teal-500"/>
+            <span>{listing.location}</span>
+            {listing.from_city && listing.to_city && (
+              <span className="text-teal-600 dark:text-teal-400 font-bold bg-teal-50 dark:bg-teal-900/20 px-1.5 py-0.5 rounded-full">
+                {listing.from_city} → {listing.to_city}
+              </span>
+            )}
+          </div>
+        </div>
+        {listing.is_online && (
+          <div className="flex items-center gap-1 bg-green-500/15 border border-green-400/30 rounded-full px-2.5 py-1 shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"/>
+            <span className="text-[10px] font-bold text-green-500">LIVE</span>
+          </div>
+        )}
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="bg-card border border-card-border rounded-xl p-2.5 text-center">
+          <Stars rating={rating} size={10}/>
+          <div className="text-sm font-black mt-0.5">{rating>0 ? rating.toFixed(1) : "New"}</div>
+          <div className="text-[9px] text-muted-foreground">{revCount} reviews</div>
+        </div>
+        <div className="bg-card border border-card-border rounded-xl p-2.5 text-center">
+          <div className="text-sm font-black text-teal-600 dark:text-teal-400">{priceDisp}</div>
+          <div className="text-[9px] text-muted-foreground capitalize">{listing.price_type??"fixed"}</div>
+        </div>
+        <div className="bg-card border border-card-border rounded-xl p-2.5 text-center">
+          <Eye size={13} className="text-muted-foreground mx-auto mb-0.5"/>
+          <div className="text-sm font-black">{listing.view_count??0}</div>
+          <div className="text-[9px] text-muted-foreground">views</div>
+        </div>
+      </div>
+
+      {/* Badges */}
+      <div className="flex flex-wrap gap-1.5 mb-4">
+        {listing.is_verified && (
+          <span className="flex items-center gap-1 text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-full font-bold border border-blue-200/50 dark:border-blue-700/30">
+            <Shield size={9}/> Verified
+          </span>
+        )}
+        {listing.covers_other_routes && (
+          <span className="text-[10px] bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 px-2.5 py-1 rounded-full font-semibold border border-purple-100 dark:border-purple-800/30">
+            🗺️ Multiple Routes
+          </span>
+        )}
+        {listing.tags?.map(tag => (
+          <span key={tag} className="flex items-center gap-1 text-[10px] bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 px-2.5 py-1 rounded-full font-semibold border border-teal-100 dark:border-teal-800/30">
+            <Tag size={8}/> {tag}
+          </span>
+        ))}
+      </div>
+
+      {/* Description */}
+      {listing.description && (
+        <div className="bg-card border border-card-border rounded-2xl p-4 mb-4">
+          <h3 className="text-xs font-black uppercase tracking-wide text-muted-foreground mb-2">About This Service</h3>
+          <p className="text-sm text-foreground leading-relaxed">{listing.description}</p>
+        </div>
+      )}
+
+      {/* Contact */}
+      <div className="flex gap-2 mb-4">
+        {listing.phone && (
+          <a href={`tel:+265${listing.phone}`}
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-border font-bold text-sm hover:bg-muted transition-all active:scale-95">
+            <Phone size={15}/> Call
+          </a>
+        )}
+        {listing.whatsapp && (
+          <a href={`https://wa.me/265${listing.whatsapp}?text=Hi! I found you on TransportMW — I'd like to book a ride.`}
+            target="_blank" rel="noopener noreferrer"
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold text-sm transition-all active:scale-95">
+            <MessageCircle size={15}/> WhatsApp
+          </a>
+        )}
+      </div>
+
+      {/* Book button */}
+      <button onClick={() => { setShowBook(!showBook); setBDone(false); setBError(""); }}
+        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-black text-sm transition-all active:scale-95 mb-4">
+        <Zap size={15}/> {showBook ? "Hide Form" : "Book This Ride"}
+      </button>
+
+      {/* ── Booking form ── */}
+      {showBook && !bDone && (
+        <div className="bg-card border border-card-border rounded-2xl p-4 mb-4 space-y-3 animate-in fade-in duration-200">
+          <h3 className="text-sm font-black flex items-center gap-2"><Calendar size={14} className="text-teal-500"/> Book a Ride</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {[["From *",bFrom,setBFrom,"Pickup"],["To *",bTo,setBTo,"Drop-off"]].map(([l,v,fn,ph]:[any,any,any,any]) => (
+              <div key={l}>
+                <label className="text-[10px] font-black uppercase tracking-wide text-muted-foreground mb-1 block">{l}</label>
+                <input value={v} onChange={e => fn(e.target.value)} placeholder={ph}
+                  className="w-full px-3 py-2 rounded-xl border border-input bg-background text-sm outline-none focus:border-teal-500 transition-all"/>
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {[["Name *",bName,setBName,"Full name","text"],["Phone *",bPhone,setBPhone,"08xx xxx xxx","tel"]].map(([l,v,fn,ph,t]:[any,any,any,any,any]) => (
+              <div key={l}>
+                <label className="text-[10px] font-black uppercase tracking-wide text-muted-foreground mb-1 block">{l}</label>
+                <input value={v} onChange={e => fn(e.target.value)} placeholder={ph} type={t}
+                  className="w-full px-3 py-2 rounded-xl border border-input bg-background text-sm outline-none focus:border-teal-500 transition-all"/>
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] font-black uppercase tracking-wide text-muted-foreground mb-1 block">Date (optional)</label>
+              <input value={bDate} onChange={e => setBDate(e.target.value)} type="date"
+                className="w-full px-3 py-2 rounded-xl border border-input bg-background text-sm outline-none focus:border-teal-500 transition-all"/>
+            </div>
+            <div>
+              <label className="text-[10px] font-black uppercase tracking-wide text-muted-foreground mb-1 block flex items-center gap-1"><Users size={9}/> Passengers</label>
+              <select value={bPax} onChange={e => setBPax(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-input bg-background text-sm outline-none focus:border-teal-500 transition-all appearance-none">
+                {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n} {n===1?"passenger":"passengers"}</option>)}
+              </select>
+            </div>
+          </div>
+          {bError && <p className="text-xs text-red-500">{bError}</p>}
+          <button onClick={submitBooking} disabled={bLoading}
+            className="w-full py-3 bg-teal-600 hover:bg-teal-500 text-white font-black text-sm rounded-xl transition-all active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2">
+            {bLoading ? <><Loader2 size={14} className="animate-spin"/> Sending...</> : <><Zap size={14}/> Confirm Booking Request</>}
+          </button>
+          <p className="text-[10px] text-muted-foreground text-center">Driver will contact you to confirm. No payment needed yet.</p>
+        </div>
+      )}
+
+      {bDone && (
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-4 mb-4 text-center animate-in fade-in duration-200">
+          <CheckCircle2 size={32} className="text-green-600 mx-auto mb-2"/>
+          <h3 className="text-sm font-black text-green-700 dark:text-green-400 mb-1">Booking Request Sent!</h3>
+          <p className="text-xs text-green-600 dark:text-green-500">The driver will contact you shortly.</p>
+          {listing.whatsapp && (
+            <a href={`https://wa.me/265${listing.whatsapp}?text=Hi! I just sent a booking request on TransportMW.`}
+              target="_blank" rel="noopener noreferrer"
+              className="mt-3 inline-flex items-center gap-1.5 text-xs bg-green-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-green-500 transition-all">
+              <MessageCircle size={11}/> Follow up on WhatsApp
+            </a>
+          )}
+        </div>
+      )}
+
+      {/* ── Reviews ── */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-black flex items-center gap-2">
+            <Star size={13} className="fill-amber-400 text-amber-400"/> Reviews ({revCount})
+          </h3>
+          <button onClick={() => { setShowReview(!showReview); setRDone(false); setRError(""); }}
+            className="text-xs text-teal-600 dark:text-teal-400 font-bold hover:underline">
+            {showReview ? "Cancel" : "+ Write Review"}
+          </button>
+        </div>
+
+        {showReview && !rDone && (
+          <div className="bg-card border border-card-border rounded-2xl p-4 mb-3 space-y-3 animate-in fade-in duration-200">
+            <div className="flex gap-1">
+              {[1,2,3,4,5].map(i => (
+                <button key={i} onClick={() => setRRating(i)} className="transition-all active:scale-90">
+                  <Star size={28} className={i<=rRating?"fill-amber-400 text-amber-400":"fill-muted text-muted"}/>
+                </button>
+              ))}
+            </div>
+            <input value={rName} onChange={e => setRName(e.target.value)} placeholder="Your name (optional)"
+              className="w-full px-3 py-2 rounded-xl border border-input bg-background text-sm outline-none focus:border-teal-500 transition-all"/>
+            <textarea value={rComment} onChange={e => setRComment(e.target.value)}
+              placeholder="Tell others about your experience..." rows={3}
+              className="w-full px-3 py-2 rounded-xl border border-input bg-background text-sm outline-none resize-none focus:border-teal-500 transition-all"/>
+            {rError && <p className="text-xs text-red-500">{rError}</p>}
+            <button onClick={submitReview} disabled={rLoading}
+              className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-white font-black text-sm rounded-xl transition-all active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2">
+              {rLoading ? <><Loader2 size={13} className="animate-spin"/> Submitting...</> : <><Star size={13}/> Submit Review</>}
+            </button>
+          </div>
+        )}
+
+        {rDone && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3 mb-3 flex items-center gap-2.5 animate-in fade-in duration-200">
+            <CheckCircle2 size={16} className="text-amber-600"/>
+            <p className="text-xs text-amber-700 dark:text-amber-400 font-semibold">Review submitted — thank you!</p>
+          </div>
+        )}
+
+        {reviews.length === 0 ? (
+          <div className="text-center py-8 text-xs text-muted-foreground">No reviews yet — be the first!</div>
+        ) : (
+          <div className="space-y-2">
+            {reviews.map(r => (
+              <div key={r.id} className="bg-card border border-card-border rounded-xl p-3">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center text-[10px] font-black text-teal-700 dark:text-teal-400">
+                      {(r.reviewer_name??"A").charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-xs font-bold">{r.reviewer_name??"Anonymous"}</span>
+                  </div>
+                  <Stars rating={r.rating} size={11}/>
+                </div>
+                {r.comment && <p className="text-xs text-muted-foreground leading-relaxed">{r.comment}</p>}
+                <p className="text-[9px] text-muted-foreground mt-1.5">
+                  {new Date(r.created_at).toLocaleDateString("en-MW",{day:"numeric",month:"short",year:"numeric"})}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Sticky CTA ── */}
+      <div className="fixed bottom-14 lg:bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur border-t border-border px-4 py-3">
+        <div className="max-w-lg mx-auto flex gap-2 items-center">
+          <div className="flex-1">
+            <div className="text-sm font-black">{priceDisp}</div>
+            <div className="text-[10px] text-muted-foreground capitalize">{listing.price_type??"fixed"} · {listing.vehicle_type}</div>
+          </div>
+          {listing.whatsapp && (
+            <a href={`https://wa.me/265${listing.whatsapp}?text=Hi! I found you on TransportMW.`}
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-green-600 hover:bg-green-500 text-white font-bold text-xs rounded-xl transition-all active:scale-95">
+              <MessageCircle size={13}/> WhatsApp
+            </a>
+          )}
+          <button onClick={() => { setShowBook(true); window.scrollTo({top:500,behavior:"smooth"}); }}
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-teal-600 hover:bg-teal-500 text-white font-black text-xs rounded-xl transition-all active:scale-95">
+            <Zap size={13}/> Book
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
