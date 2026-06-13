@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { MapPin, Star, MessageCircle, Phone, Shield, ChevronRight, ImageOff } from "lucide-react";
+import { MapPin, Star, MessageCircle, Phone, Shield, ChevronRight } from "lucide-react";
 
 const EMOJI: Record<string,string> = {
   "Taxi":"🚕","Motorcycle":"🏍️","Minibus":"🚌","Shuttle":"🚐","Hire Car":"🚗",
@@ -20,15 +20,15 @@ export interface Service {
   is_premium?:boolean;
   tags?:string[];
   whatsapp?:string; phone?:string;
-  thumbnail_url?:string|null;          // ← from listing_images trigger
+  thumbnail_url?:string|null;
   worker?:{ name?:string; profilePhoto?:string; profile_photo?:string;
     isVerified?:boolean; is_verified?:boolean; badge?:string;
     whatsapp?:string; phone?:string; } | null;
 }
 
 export function ServiceCard({ service: s }: { service: Service }) {
-  const [pressed, setPressed]   = useState(false);
-  const [imgErr, setImgErr]     = useState(false);
+  const [pressed, setPressed] = useState(false);
+  const [imgErr, setImgErr]   = useState(false);
 
   const w          = s.worker;
   const isOnline   = s.is_online   ?? s.isOnline   ?? false;
@@ -47,12 +47,10 @@ export function ServiceCard({ service: s }: { service: Service }) {
   return (
     <Link href={`/transport/${s.id}`}>
       <div
-        onMouseDown={() => setPressed(true)}
-        onMouseUp={() => setPressed(false)}
-        onTouchStart={() => setPressed(true)}
-        onTouchEnd={() => setPressed(false)}
+        onMouseDown={() => setPressed(true)} onMouseUp={() => setPressed(false)}
+        onTouchStart={() => setPressed(true)} onTouchEnd={() => setPressed(false)}
         style={{ transform: pressed ? "scale(0.97)" : "scale(1)", transition: "transform 120ms ease" }}
-        className={`group relative bg-card rounded-2xl overflow-hidden cursor-pointer
+        className={`group relative bg-card rounded-2xl overflow-hidden cursor-pointer flex flex-col
           ${isPremium
             ? "border-2 border-yellow-400/60 shadow-lg shadow-yellow-500/10"
             : isFeatured
@@ -61,8 +59,8 @@ export function ServiceCard({ service: s }: { service: Service }) {
           }`}
       >
         {/* Premium/Featured ribbon */}
-        {(isPremium||isFeatured) && (
-          <div className={`flex items-center justify-center gap-1.5 py-1 text-[10px] font-black tracking-widest uppercase text-white
+        {(isPremium || isFeatured) && (
+          <div className={`flex items-center justify-center gap-1.5 py-1 text-[10px] font-black tracking-widest uppercase text-white shrink-0
             ${isPremium
               ? "bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-500"
               : "bg-gradient-to-r from-teal-600 to-teal-500"}`}>
@@ -70,49 +68,60 @@ export function ServiceCard({ service: s }: { service: Service }) {
           </div>
         )}
 
-        {/* ── Thumbnail image (shown when available) ── */}
-        {thumb ? (
-          <div className="relative w-full h-36 overflow-hidden">
+        {/* ── PHOTO card — tall portrait image ── */}
+        {thumb && (
+          <div className="relative w-full overflow-hidden" style={{ aspectRatio: "4/5" }}>
             <img
-              src={thumb}
-              alt={s.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              src={thumb} alt={s.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               onError={() => setImgErr(true)}
             />
-            {/* Dark gradient so text overlay works */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"/>
-            {/* Online badge over image */}
+            {/* Gradient overlay bottom — text lives here */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"/>
+
+            {/* Online badge */}
             {isOnline && (
-              <div className="absolute top-2 right-2 flex items-center gap-1 bg-green-500/90 rounded-full px-2 py-0.5">
+              <div className="absolute top-2.5 right-2.5 flex items-center gap-1 bg-green-500/90 backdrop-blur rounded-full px-2 py-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"/>
                 <span className="text-[9px] font-bold text-white">LIVE</span>
               </div>
             )}
-          </div>
-        ) : (
-          /* No photo — emoji avatar fallback */
-          isOnline && (
-            <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-green-500/20 border border-green-400/30 rounded-full px-2 py-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"/>
-              <span className="text-[9px] font-bold text-green-400">LIVE</span>
+
+            {/* Vehicle type pill top-left */}
+            <div className="absolute top-2.5 left-2.5 flex items-center gap-1 bg-black/40 backdrop-blur rounded-full px-2 py-0.5">
+              <span className="text-sm">{EMOJI[vType] ?? "🚗"}</span>
             </div>
-          )
+
+            {/* Title + location overlaid on image bottom */}
+            <div className="absolute bottom-0 left-0 right-0 p-3">
+              <h3 className="text-sm font-black text-white line-clamp-2 leading-snug mb-1 drop-shadow">
+                {s.title}
+              </h3>
+              <div className="flex items-center gap-1 text-[11px] text-white/75">
+                <MapPin size={9} className="shrink-0 text-teal-400"/>
+                <span className="truncate">{s.location}</span>
+                {s.from_city && s.to_city && (
+                  <span className="ml-1 text-teal-300 font-bold truncate">{s.from_city}→{s.to_city}</span>
+                )}
+              </div>
+            </div>
+          </div>
         )}
 
-        <div className="p-4">
-          {/* Top row: emoji avatar + title */}
-          <div className="flex items-start gap-3 mb-3">
-            {/* Only show emoji avatar when no thumbnail */}
-            {!thumb && (
-              <div className="relative shrink-0">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-500/20 to-teal-600/30 border border-teal-500/20 flex items-center justify-center text-3xl">
-                  {EMOJI[vType] ?? "🚗"}
-                </div>
+        {/* ── NO PHOTO card — compact horizontal ── */}
+        {!thumb && (
+          <div className="flex items-start gap-3 p-4 pb-3">
+            {isOnline && (
+              <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-green-500/20 border border-green-400/30 rounded-full px-2 py-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"/>
+                <span className="text-[9px] font-bold text-green-400">LIVE</span>
               </div>
             )}
-
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500/20 to-teal-600/30 border border-teal-500/20 flex items-center justify-center text-2xl shrink-0">
+              {EMOJI[vType] ?? "🚗"}
+            </div>
             <div className="flex-1 min-w-0 pt-0.5">
-              <h3 className="text-sm font-black text-foreground group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors line-clamp-2 leading-snug mb-1">
+              <h3 className="text-sm font-black text-foreground group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors line-clamp-2 leading-snug mb-0.5">
                 {s.title}
               </h3>
               <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
@@ -120,29 +129,30 @@ export function ServiceCard({ service: s }: { service: Service }) {
                 <span className="truncate">{s.location}</span>
               </div>
               {s.from_city && s.to_city && (
-                <div className="flex items-center gap-1 mt-0.5">
-                  <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20 px-1.5 py-0.5 rounded-full">
-                    {s.from_city} → {s.to_city}
-                  </span>
-                </div>
+                <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20 px-1.5 py-0.5 rounded-full mt-0.5 inline-block">
+                  {s.from_city} → {s.to_city}
+                </span>
               )}
             </div>
           </div>
+        )}
+
+        {/* ── Bottom info (both card types) ── */}
+        <div className={`flex flex-col gap-2 flex-1 ${thumb ? "p-3 pt-2" : "px-4 pb-4"}`}>
 
           {/* Badges */}
-          <div className="flex items-center gap-1 flex-wrap mb-3">
+          <div className="flex items-center gap-1 flex-wrap">
             {verified && (
               <span className="flex items-center gap-0.5 text-[9px] bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full font-bold border border-blue-200/50 dark:border-blue-700/30">
                 <Shield size={8}/> Verified
               </span>
             )}
-            {/* Photo badge — signals trust */}
             {thumb && (
-              <span className="flex items-center gap-0.5 text-[9px] bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 px-2 py-0.5 rounded-full font-bold border border-teal-100 dark:border-teal-800/30">
+              <span className="text-[9px] bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 px-2 py-0.5 rounded-full font-bold border border-teal-100 dark:border-teal-800/30">
                 📷 Photo
               </span>
             )}
-            {s.tags?.slice(0,2).map(t => (
+            {s.tags?.slice(0, thumb ? 1 : 2).map(t => (
               <span key={t} className="text-[9px] bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 px-2 py-0.5 rounded-full font-semibold border border-teal-100 dark:border-teal-800/30">
                 {t}
               </span>
@@ -150,11 +160,11 @@ export function ServiceCard({ service: s }: { service: Service }) {
           </div>
 
           {/* Rating + price */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-1.5">
-              <div className="flex items-center gap-0.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1">
+              <div className="flex gap-0.5">
                 {[1,2,3,4,5].map(i => (
-                  <Star key={i} size={12} className={i<=Math.round(rating)?"fill-amber-400 text-amber-400":"fill-muted text-muted"}/>
+                  <Star key={i} size={11} className={i<=Math.round(rating)?"fill-amber-400 text-amber-400":"fill-muted text-muted"}/>
                 ))}
               </div>
               <span className="text-xs font-bold text-foreground">{rating>0 ? rating.toFixed(1) : "New"}</span>
@@ -163,20 +173,20 @@ export function ServiceCard({ service: s }: { service: Service }) {
             <span className="text-sm font-black text-teal-600 dark:text-teal-400">{priceDisp}</span>
           </div>
 
-          {/* CTA row */}
-          <div className="flex items-center justify-between pt-2.5 border-t border-border/50">
+          {/* CTA */}
+          <div className="flex items-center justify-between pt-2 border-t border-border/50 mt-auto">
             <div className="flex gap-1.5">
               {phoneNum && (
                 <a href={`tel:+265${phoneNum}`} onClick={e => e.stopPropagation()}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-border text-[11px] text-muted-foreground hover:bg-muted hover:text-foreground transition-all active:scale-95">
-                  <Phone size={11}/> Call
+                  className="flex items-center gap-1 px-2 py-1.5 rounded-xl border border-border text-[11px] text-muted-foreground hover:bg-muted transition-all active:scale-95">
+                  <Phone size={10}/> Call
                 </a>
               )}
               {waNum && (
                 <a href={`https://wa.me/265${waNum}?text=Hi, I found you on TransportMW!`}
                   target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-green-600 text-[11px] text-white font-bold hover:bg-green-500 transition-all active:scale-95">
-                  <MessageCircle size={11}/> WhatsApp
+                  className="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-green-600 text-[11px] text-white font-bold hover:bg-green-500 transition-all active:scale-95">
+                  <MessageCircle size={10}/> WhatsApp
                 </a>
               )}
             </div>
