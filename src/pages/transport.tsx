@@ -302,19 +302,15 @@ export default function TransportPage() {
 
             {/* Grid */}
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="columns-2 [column-gap:12px]">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className="bg-card border border-card-border rounded-2xl p-4 animate-pulse">
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="w-14 h-14 rounded-2xl bg-muted shrink-0"/>
-                      <div className="flex-1 space-y-2 pt-1">
-                        <div className="h-3.5 bg-muted rounded-lg w-4/5"/>
-                        <div className="h-2.5 bg-muted rounded-lg w-1/2"/>
-                        <div className="h-2.5 bg-muted rounded-lg w-2/3"/>
-                      </div>
+                  <div key={i} className="break-inside-avoid mb-3 bg-card border border-card-border rounded-2xl overflow-hidden animate-pulse">
+                    {i % 2 === 0 && <div className="w-full bg-muted" style={{aspectRatio:"4/5"}}/>}
+                    <div className="p-3 space-y-2">
+                      <div className="h-3 bg-muted rounded-lg w-4/5"/>
+                      <div className="h-2.5 bg-muted rounded-lg w-1/2"/>
+                      <div className="h-8 bg-muted rounded-xl mt-2"/>
                     </div>
-                    <div className="h-2.5 bg-muted rounded-lg mb-2"/>
-                    <div className="h-9 bg-muted rounded-xl"/>
                   </div>
                 ))}
               </div>
@@ -330,9 +326,9 @@ export default function TransportPage() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="columns-2 [column-gap:12px]">
                   {listings.map((l, i) => (
-                    <div key={l.id}
+                    <div key={l.id} className="break-inside-avoid mb-3"
                       style={{ animationDelay: `${i * 60}ms`, animation: "fadeUp 300ms ease both" }}>
                       <ServiceCard service={normalizeToServiceCard(l)} />
                     </div>
