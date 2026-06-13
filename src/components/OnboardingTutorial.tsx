@@ -16,7 +16,7 @@ interface Rect { left:number; top:number; width:number; height:number; }
 function getRect(s: number): Rect | null {
   let el: Element | null = null;
   if (STEPS[s].isMenu) {
-    el = document.querySelector("header button.lg\\:hidden");
+    el = document.querySelector("header button.lg\\:hidden, header button[class*=\"lg:hidden\"]");
   } else {
     const items = document.querySelectorAll("nav.lg\\:hidden.fixed.bottom-0 a");
     el = items[s - 1] ?? null;
