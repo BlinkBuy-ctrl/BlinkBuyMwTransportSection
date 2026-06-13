@@ -8,6 +8,7 @@ import {
   Bell, BookOpen, Settings
 } from "lucide-react";
 import SOSOverlay from "@/components/SOSOverlay";
+import OnboardingTutorial from "@/components/OnboardingTutorial";
 import OfflineBanner from "@/components/OfflineBanner";
 
 const BOTTOM_NAV = [
@@ -213,6 +214,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Global SOS float button */}
       <SOSOverlay />
+      <OnboardingTutorial />
 
       {/* ── FOOTER (desktop) ──────────────────────────────────────────── */}
       <footer className="hidden lg:block bg-[hsl(215,55%,8%)] text-white/70 border-t border-white/5">
