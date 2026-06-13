@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
 import { Download, BookOpen, X, ChevronRight, Shield, Moon, Sun, Trash2, AlertTriangle } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { getLanguage, setLanguage } from "@/lib/auth";
@@ -15,7 +14,6 @@ const TUTORIAL_STEPS = [
 ];
 
 export default function SettingsPage() {
-  const [, setLocation] = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { isInstallable, install } = usePWA();
   const [lang, setLang] = useState<"en"|"ny">(getLanguage());
@@ -149,7 +147,7 @@ export default function SettingsPage() {
             <div className="text-sm font-medium">How to Use TransportMW</div>
             <div className="text-xs text-muted-foreground">Step-by-step guide</div>
           </div>
-          <button onClick={() => { localStorage.removeItem("tmw_onboarding_done"); setLocation("/"); }}
+          <button onClick={() => { localStorage.removeItem("tmw_onboarding_done"); window.dispatchEvent(new Event("tmw:restart-tutorial")); }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-teal-500 text-teal-600 text-xs font-semibold hover:bg-teal-50 dark:hover:bg-teal-900/10 transition-all">
             <BookOpen size={13}/> Tutorial
           </button>
