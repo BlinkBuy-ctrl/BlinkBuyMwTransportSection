@@ -4,7 +4,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { usePWA } from "@/hooks/usePWA";
 import {
   Home, Search, Plus, LayoutDashboard, Sun, Moon,
-  Menu, X, Car, Download, MessageCircle, Shield,
+  Menu, X, Download, MessageCircle, Shield,
   Bell, BookOpen, Settings
 } from "lucide-react";
 import SOSOverlay from "@/components/SOSOverlay";
@@ -57,7 +57,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="fixed bottom-20 left-4 right-4 z-[60] md:bottom-6 md:left-auto md:right-6 md:w-80 animate-in slide-in-from-bottom-4 duration-300">
           <div className="bg-[hsl(215,55%,12%)] border border-white/10 rounded-2xl p-4 shadow-2xl flex items-start gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center shrink-0">
-              <Car size={18} className="text-white"/>
+              <img src="/favicon.svg" alt="TransportMW" className="w-5 h-5 object-contain"/>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-white text-sm font-bold">Install TransportMW</p>
@@ -87,7 +87,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             {/* Brand */}
             <Link href="/" className="flex items-center gap-2 shrink-0 group">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-150 active:scale-95">
-                <Car size={16} className="text-white"/>
+                <img src="/favicon.svg" alt="TransportMW" className="w-5 h-5 object-contain"/>
               </div>
               <div className="flex flex-col leading-none">
                 <span className="font-black text-base tracking-tight text-white">TransportMW</span>
@@ -223,7 +223,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center">
-                  <Car size={16} className="text-white"/>
+                  <img src="/favicon.svg" alt="TransportMW" className="w-5 h-5 object-contain"/>
                 </div>
                 <span className="font-black text-white text-lg">TransportMW</span>
               </div>
