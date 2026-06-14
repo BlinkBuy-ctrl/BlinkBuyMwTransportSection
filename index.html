@@ -63,417 +63,372 @@
       #root { min-height: 100dvh; }
 
       /* ═══════════════════════════════════════════
-         PWA SPLASH
+         GPS PIN LOADING SCREEN
       ═══════════════════════════════════════════ */
       #pwa-splash {
         position: fixed;
         inset: 0;
         z-index: 9999;
-        display: none; /* JS shows it only in standalone */
+        display: none;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(160deg, #0d1f3c 0%, #091525 55%, #050f1e 100%);
+        background: #f0f4f8;
         font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
         overflow: hidden;
         opacity: 1;
-        transition: opacity 0.55s ease;
+        transition: opacity 0.4s ease;
       }
       #pwa-splash.fade-out {
         opacity: 0;
         pointer-events: none;
       }
 
-      /* ── Background floating dots ── */
-      .sp-dots { position: absolute; inset: 0; pointer-events: none; }
-      .sp-dot {
+      /* ── Map background ── */
+      .sp-map {
         position: absolute;
-        width: 3px; height: 3px;
-        background: rgba(45,212,191,0.18);
-        border-radius: 50%;
-        animation: dotFloat 5s ease-in-out infinite;
-      }
-      @keyframes dotFloat {
-        0%,100% { transform: translateY(0) scale(1); opacity: 0.18; }
-        50%      { transform: translateY(-22px) scale(1.6); opacity: 0.45; }
-      }
-
-      /* ── Logo block ── */
-      .sp-logo {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 14px;
-        margin-bottom: 44px;
-        animation: spFadeUp 0.55s ease both;
-      }
-      .sp-icon {
-        width: 72px; height: 72px;
-        background: linear-gradient(135deg, #2dd4bf, #0d9488);
-        border-radius: 20px;
-        display: flex; align-items: center; justify-content: center;
-        box-shadow: 0 0 0 8px rgba(45,212,191,0.1), 0 16px 48px rgba(45,212,191,0.3);
-      }
-      .sp-icon svg { width: 36px; height: 36px; fill: white; }
-      .sp-title {
-        font-size: 30px; font-weight: 900;
-        color: #fff; letter-spacing: -0.5px; line-height: 1;
-      }
-      .sp-sub {
-        font-size: 11px; font-weight: 600;
-        color: #2dd4bf; letter-spacing: 2.5px;
-        text-transform: uppercase; margin-top: -4px;
-      }
-
-      /* ── Road + bus section ── */
-      .sp-road-section {
-        position: absolute;
-        bottom: 0; left: 0; right: 0;
-        height: 130px;
-      }
-
-      /* Road surface */
-      .sp-road {
-        position: absolute;
-        bottom: 0; left: 0; right: 0;
-        height: 52px;
-        background: #152a47;
-        border-top: 2px solid #1e3a5f;
-      }
-
-      /* Centre dashes — scroll right to left to feel like road moving */
-      .sp-road-dashes {
-        position: absolute;
-        top: 50%;
-        left: 0; right: 0;
-        height: 4px;
-        margin-top: -2px;
-        overflow: hidden;
-      }
-      .sp-dash-strip {
-        display: flex;
-        gap: 20px;
-        /* wide enough to loop */
-        width: 200%;
-        animation: dashScroll 0.7s linear infinite;
-      }
-      .sp-dash {
-        flex-shrink: 0;
-        width: 40px; height: 4px;
-        background: rgba(45,212,191,0.45);
-        border-radius: 2px;
-      }
-      @keyframes dashScroll {
-        from { transform: translateX(0); }
-        to   { transform: translateX(-50%); }
-      }
-
-      /* Bus — positioned on top of the road, JS drives left position */
-      #sp-bus {
-        position: absolute;
-        bottom: 50px; /* sit on road surface */
-        left: -220px; /* starts off-screen left, JS sets this */
-        width: 200px;
-        height: auto;
-        filter: drop-shadow(0 6px 20px rgba(45,212,191,0.3));
-        /* subtle vertical bob */
-        animation: busBob 0.45s ease-in-out infinite alternate;
-        will-change: left;
-      }
-      @keyframes busBob {
-        from { transform: translateY(0px); }
-        to   { transform: translateY(-3px); }
-      }
-
-      /* Exhaust — anchored relative to bus via JS */
-      #sp-exhaust {
-        position: absolute;
-        bottom: 96px;
-        left: 0; /* JS keeps this = bus left - 14px */
-        display: flex;
-        gap: 5px;
-        align-items: flex-end;
-      }
-      .sp-puff {
-        width: 9px; height: 9px;
-        background: rgba(255,255,255,0.14);
-        border-radius: 50%;
-        animation: puffOut 0.9s ease-out infinite;
-      }
-      .sp-puff:nth-child(2) { animation-delay: 0.3s; width: 7px; height: 7px; }
-      .sp-puff:nth-child(3) { animation-delay: 0.6s; width: 5px; height: 5px; }
-      @keyframes puffOut {
-        0%   { opacity: 0.55; transform: translateX(0)   translateY(0)    scale(1); }
-        100% { opacity: 0;    transform: translateX(-20px) translateY(-16px) scale(2.2); }
-      }
-
-      /* ── Progress bar (synced with bus via JS) ── */
-      .sp-bar-section {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 20px;
-        animation: spFadeUp 0.55s 0.15s ease both;
-        width: 80%;
-        max-width: 300px;
-      }
-      .sp-bar-track {
+        inset: 0;
         width: 100%;
-        height: 5px;
-        background: rgba(255,255,255,0.09);
-        border-radius: 99px;
-        overflow: hidden;
-        position: relative;
-      }
-      #sp-bar-fill {
         height: 100%;
-        width: 0%;
-        background: linear-gradient(90deg, #2dd4bf, #14b8a6);
-        border-radius: 99px;
-        box-shadow: 0 0 10px rgba(45,212,191,0.7);
-        transition: width 0.08s linear;
-      }
-      /* Shimmer on bar */
-      #sp-bar-fill::after {
-        content: '';
-        position: absolute;
-        top: 0; right: 0;
-        width: 30px; height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-        animation: barShimmer 1.2s ease-in-out infinite;
-      }
-      @keyframes barShimmer {
-        0%   { opacity: 0; }
-        50%  { opacity: 1; }
-        100% { opacity: 0; }
       }
 
-      #sp-bar-label {
-        font-size: 11px;
-        font-weight: 600;
-        color: rgba(255,255,255,0.4);
-        letter-spacing: 0.5px;
+      /* ── Map grid lines ── */
+      .sp-map-grid {
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(45,212,191,0.08) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(45,212,191,0.08) 1px, transparent 1px);
+        background-size: 48px 48px;
       }
+
+      /* ── Map road shapes ── */
+      .sp-map-svg {
+        position: absolute;
+        inset: 0;
+        width: 100%; height: 100%;
+      }
+
+      /* ── Route line drawing itself ── */
+      @keyframes routeDraw {
+        from { stroke-dashoffset: 600; }
+        to   { stroke-dashoffset: 0; }
+      }
+      .sp-route {
+        fill: none;
+        stroke: #2dd4bf;
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-dasharray: 600;
+        animation: routeDraw 1.4s ease 0.2s both;
+      }
+      .sp-route-bg {
+        fill: none;
+        stroke: rgba(45,212,191,0.15);
+        stroke-width: 6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      /* ── Map location labels ── */
+      @keyframes labelPop {
+        0%   { transform: scale(0) translateY(4px); opacity: 0; }
+        65%  { transform: scale(1.1) translateY(-1px); opacity: 1; }
+        100% { transform: scale(1) translateY(0); opacity: 1; }
+      }
+      .sp-map-label {
+        position: absolute;
+        background: #fff;
+        border: 1.5px solid #2dd4bf;
+        border-radius: 6px;
+        padding: 3px 8px;
+        font-size: 10px;
+        font-weight: 700;
+        color: #0f6e56;
+        white-space: nowrap;
+        transform-origin: center bottom;
+        animation: labelPop 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+      }
+      .sp-label-a { top: 22%; left: 10%; animation-delay: 1.0s; }
+      .sp-label-b { bottom: 28%; right: 8%; animation-delay: 1.8s; }
+
+      /* ── Centre content ── */
+      .sp-center {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+        z-index: 2;
+      }
+
+      /* ── GPS Pin ── */
+      @keyframes pinDrop {
+        0%   { transform: translateY(-90px) scale(0.5); opacity: 0; }
+        55%  { transform: translateY(10px) scale(1.08); opacity: 1; }
+        72%  { transform: translateY(-5px) scale(0.97); }
+        84%  { transform: translateY(4px) scale(1.02); }
+        100% { transform: translateY(0) scale(1); opacity: 1; }
+      }
+      @keyframes pinPulse {
+        0%,100% { transform: scale(1); }
+        50%      { transform: scale(1.06); }
+      }
+      .sp-pin-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        animation: pinDrop 0.65s cubic-bezier(0.22,0.61,0.36,1) 0.1s both;
+      }
+      .sp-pin-svg {
+        animation: pinPulse 2s ease-in-out 0.85s infinite;
+        filter: drop-shadow(0 8px 20px rgba(45,212,191,0.35));
+      }
+      .sp-pin-tail {
+        width: 3px;
+        height: 10px;
+        background: #2dd4bf;
+        border-radius: 0 0 3px 3px;
+        margin-top: -1px;
+      }
+
+      /* ── Shadow under pin ── */
+      @keyframes shadowScale {
+        0%,100% { transform: scaleX(1); opacity: 0.2; }
+        50%      { transform: scaleX(1.15); opacity: 0.12; }
+      }
+      .sp-pin-shadow {
+        width: 22px; height: 6px;
+        background: rgba(0,0,0,0.22);
+        border-radius: 50%;
+        margin-top: 1px;
+        animation: shadowScale 2s ease-in-out 0.85s infinite;
+      }
+
+      /* ── Ripple rings ── */
+      @keyframes rippleOut {
+        0%   { transform: scale(0.3); opacity: 0.7; }
+        100% { transform: scale(2.6); opacity: 0; }
+      }
+      .sp-ripples {
+        position: absolute;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 30px; height: 12px;
+        pointer-events: none;
+      }
+      .sp-ripple {
+        position: absolute;
+        inset: 0;
+        border: 2px solid #2dd4bf;
+        border-radius: 50%;
+        animation: rippleOut 1.6s ease-out 0.85s infinite;
+        opacity: 0;
+      }
+      .sp-ripple:nth-child(2) { animation-delay: 1.25s; }
+
+      /* ── Brand row ── */
+      @keyframes spFadeUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .sp-brand {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-top: 20px;
+        animation: spFadeUp 0.4s ease 0.7s both;
+      }
+      .sp-brand-icon {
+        width: 34px; height: 34px;
+        background: #2dd4bf;
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px; font-weight: 800;
+        color: #fff;
+      }
+      .sp-brand-name {
+        font-size: 18px; font-weight: 800;
+        color: #0d1f3c; letter-spacing: -0.3px;
+      }
+
+      /* ── Status text ── */
+      .sp-status {
+        font-size: 12px; font-weight: 500;
+        color: #64748b;
+        margin-top: 6px;
+        min-height: 18px;
+        animation: spFadeUp 0.4s ease 0.85s both;
+        transition: opacity 0.18s ease;
+        letter-spacing: 0.2px;
+      }
+
+      /* ── Three loading dots (T-style wave) ── */
+      @keyframes dotWave {
+        0%,60%,100% { transform: translateY(0); opacity: 0.3; }
+        30%          { transform: translateY(-7px); opacity: 1; }
+      }
+      .sp-loading-dots {
+        display: flex;
+        gap: 7px;
+        margin-top: 14px;
+        animation: spFadeUp 0.4s ease 0.95s both;
+      }
+      .sp-ld {
+        width: 9px; height: 9px;
+        background: #2dd4bf;
+        border-radius: 50%;
+        animation: dotWave 0.9s ease-in-out infinite;
+      }
+      .sp-ld:nth-child(1) { animation-delay: 0.0s; }
+      .sp-ld:nth-child(2) { animation-delay: 0.15s; }
+      .sp-ld:nth-child(3) { animation-delay: 0.30s; }
 
       /* ── Powered by ── */
       .sp-powered {
         position: absolute;
-        bottom: 60px;
+        bottom: 20px;
         left: 0; right: 0;
         text-align: center;
         font-size: 11px;
-        color: rgba(255,255,255,0.3);
+        color: rgba(13,31,60,0.3);
         letter-spacing: 0.4px;
-        animation: spFadeUp 0.55s 0.3s ease both;
+        animation: spFadeUp 0.4s ease 1.0s both;
       }
       .sp-powered b { color: #2dd4bf; font-weight: 700; }
-
-      @keyframes spFadeUp {
-        from { opacity: 0; transform: translateY(14px); }
-        to   { opacity: 1; transform: translateY(0); }
-      }
     </style>
   </head>
   <body>
 
-    <!-- PWA SPLASH — only shown when app is installed (standalone) -->
+    <!-- PWA SPLASH — GPS Pin Loading Screen -->
     <div id="pwa-splash">
 
-      <!-- Floating dots -->
-      <div class="sp-dots">
-        <div class="sp-dot" style="left:8%;top:18%;animation-delay:0s"></div>
-        <div class="sp-dot" style="left:22%;top:55%;animation-delay:0.8s"></div>
-        <div class="sp-dot" style="left:42%;top:30%;animation-delay:1.6s"></div>
-        <div class="sp-dot" style="left:60%;top:68%;animation-delay:0.4s"></div>
-        <div class="sp-dot" style="left:78%;top:22%;animation-delay:1.2s"></div>
-        <div class="sp-dot" style="left:88%;top:50%;animation-delay:0.6s"></div>
-        <div class="sp-dot" style="left:15%;top:78%;animation-delay:2.0s"></div>
-        <div class="sp-dot" style="left:50%;top:12%;animation-delay:1.0s"></div>
-        <div class="sp-dot" style="left:33%;top:85%;animation-delay:0.2s"></div>
-        <div class="sp-dot" style="left:70%;top:40%;animation-delay:1.4s"></div>
+      <!-- Map background -->
+      <div class="sp-map">
+        <div class="sp-map-grid"></div>
+        <svg class="sp-map-svg" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <!-- Background road blocks -->
+          <rect x="0"   y="120" width="120" height="55" rx="6" fill="rgba(45,212,191,0.06)"/>
+          <rect x="140" y="60"  width="80"  height="90" rx="6" fill="rgba(45,212,191,0.06)"/>
+          <rect x="260" y="100" width="110" height="65" rx="6" fill="rgba(45,212,191,0.06)"/>
+          <rect x="30"  y="300" width="100" height="70" rx="6" fill="rgba(45,212,191,0.06)"/>
+          <rect x="220" y="280" width="130" height="55" rx="6" fill="rgba(45,212,191,0.06)"/>
+          <rect x="60"  y="500" width="90"  height="80" rx="6" fill="rgba(45,212,191,0.06)"/>
+          <rect x="240" y="480" width="110" height="60" rx="6" fill="rgba(45,212,191,0.06)"/>
+          <rect x="10"  y="650" width="140" height="55" rx="6" fill="rgba(45,212,191,0.06)"/>
+          <rect x="260" y="620" width="120" height="70" rx="6" fill="rgba(45,212,191,0.06)"/>
+          <!-- Route background glow -->
+          <path class="sp-route-bg" d="M 70 680 Q 90 580 130 500 Q 170 420 200 380 Q 230 340 250 300 Q 280 240 300 180"/>
+          <!-- Route line drawing itself -->
+          <path class="sp-route"    d="M 70 680 Q 90 580 130 500 Q 170 420 200 380 Q 230 340 250 300 Q 280 240 300 180"/>
+          <!-- Start dot -->
+          <circle cx="70" cy="680" r="6" fill="#2dd4bf" opacity="0.9"/>
+          <circle cx="70" cy="680" r="11" fill="none" stroke="#2dd4bf" stroke-width="1.5" opacity="0.4"/>
+          <!-- End dot -->
+          <circle cx="300" cy="180" r="6" fill="#2dd4bf" opacity="0.9"/>
+          <circle cx="300" cy="180" r="11" fill="none" stroke="#2dd4bf" stroke-width="1.5" opacity="0.4"/>
+        </svg>
       </div>
 
-      <!-- App logo -->
-      <div class="sp-logo">
-        <div class="sp-icon">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M4 16c0 .88.39 1.67 1 2.22V20a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h8v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm9 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM6 6h12v5H6V6z"/>
-          </svg>
-        </div>
-        <div class="sp-title">TransportMW</div>
-        <div class="sp-sub">Malawi's Ride Hub</div>
-      </div>
+      <!-- Location labels -->
+      <div class="sp-map-label sp-label-a">Pickup</div>
+      <div class="sp-map-label sp-label-b">Drop-off</div>
 
-      <!-- Progress bar -->
-      <div class="sp-bar-section">
-        <div class="sp-bar-track">
-          <div id="sp-bar-fill"></div>
+      <!-- Centre: GPS pin + brand + dots -->
+      <div class="sp-center">
+
+        <!-- GPS Pin -->
+        <div style="position:relative;">
+          <div class="sp-pin-wrap">
+            <svg class="sp-pin-svg" width="72" height="82" viewBox="0 0 72 82" xmlns="http://www.w3.org/2000/svg">
+              <!-- Outer glow ring -->
+              <circle cx="36" cy="34" r="33" fill="rgba(45,212,191,0.12)"/>
+              <!-- Pin circle -->
+              <circle cx="36" cy="34" r="28" fill="#2dd4bf"/>
+              <!-- Inner white circle -->
+              <circle cx="36" cy="34" r="20" fill="rgba(255,255,255,0.18)"/>
+              <!-- T letter -->
+              <text x="36" y="42" text-anchor="middle" fill="#ffffff"
+                    font-size="26" font-weight="900" font-family="Inter,sans-serif"
+                    letter-spacing="-1">T</text>
+              <!-- Pin tail -->
+              <polygon points="28,58 44,58 36,74" fill="#2dd4bf"/>
+            </svg>
+          </div>
+          <!-- Ripples -->
+          <div class="sp-ripples">
+            <div class="sp-ripple"></div>
+            <div class="sp-ripple"></div>
+          </div>
         </div>
-        <span id="sp-bar-label">Loading…</span>
+
+        <!-- Shadow -->
+        <div class="sp-pin-shadow"></div>
+
+        <!-- Brand name -->
+        <div class="sp-brand">
+          <div class="sp-brand-name">TransportMW</div>
+        </div>
+
+        <!-- Status text -->
+        <div class="sp-status" id="sp-status">Finding your ride…</div>
+
+        <!-- Three bouncing dots -->
+        <div class="sp-loading-dots">
+          <div class="sp-ld"></div>
+          <div class="sp-ld"></div>
+          <div class="sp-ld"></div>
+        </div>
+
       </div>
 
       <!-- Powered by Otechy -->
       <div class="sp-powered">Powered by <b>Otechy</b></div>
 
-      <!-- Road strip with bus -->
-      <div class="sp-road-section">
-        <!-- Bus SVG -->
-        <svg id="sp-bus" viewBox="0 0 220 85" xmlns="http://www.w3.org/2000/svg">
-          <!-- Body -->
-          <rect x="8" y="12" width="196" height="58" rx="8" fill="#1e3a5f" stroke="#2dd4bf" stroke-width="1.5"/>
-          <!-- Roof teal bar -->
-          <rect x="8" y="12" width="196" height="11" rx="8" fill="#2dd4bf" opacity="0.85"/>
-          <!-- Windshield (front = right side, bus travels right) -->
-          <rect x="172" y="20" width="26" height="30" rx="4" fill="#0a1828" stroke="#2dd4bf" stroke-width="1"/>
-          <!-- Headlight -->
-          <rect x="198" y="30" width="6" height="7" rx="2" fill="#fbbf24"/>
-          <!-- Windows -->
-          <rect x="16"  y="22" width="28" height="20" rx="3" fill="#0a1828" stroke="#2dd4bf" stroke-width="1" opacity="0.9"/>
-          <rect x="52"  y="22" width="28" height="20" rx="3" fill="#0a1828" stroke="#2dd4bf" stroke-width="1" opacity="0.9"/>
-          <rect x="88"  y="22" width="28" height="20" rx="3" fill="#0a1828" stroke="#2dd4bf" stroke-width="1" opacity="0.9"/>
-          <rect x="124" y="22" width="28" height="20" rx="3" fill="#0a1828" stroke="#2dd4bf" stroke-width="1" opacity="0.9"/>
-          <!-- Door -->
-          <rect x="16" y="44" width="24" height="22" rx="3" fill="#152e4d" stroke="#2dd4bf" stroke-width="1" opacity="0.8"/>
-          <!-- Brand text -->
-          <text x="108" y="58" text-anchor="middle" fill="#2dd4bf" font-size="8.5" font-weight="700"
-                font-family="Inter,sans-serif" letter-spacing="1.2">TransportMW</text>
-          <!-- Wheels -->
-          <circle cx="44"  cy="74" r="12" fill="#0d1f3c" stroke="#2dd4bf" stroke-width="2"/>
-          <circle cx="44"  cy="74" r="5"  fill="#1e3a5f"/>
-          <line x1="44" y1="62" x2="44" y2="86" stroke="#2dd4bf" stroke-width="1.2" opacity="0.55"/>
-          <line x1="32" y1="74" x2="56" y2="74" stroke="#2dd4bf" stroke-width="1.2" opacity="0.55"/>
-
-          <circle cx="168" cy="74" r="12" fill="#0d1f3c" stroke="#2dd4bf" stroke-width="2"/>
-          <circle cx="168" cy="74" r="5"  fill="#1e3a5f"/>
-          <line x1="168" y1="62" x2="168" y2="86" stroke="#2dd4bf" stroke-width="1.2" opacity="0.55"/>
-          <line x1="156" y1="74" x2="180" y2="74" stroke="#2dd4bf" stroke-width="1.2" opacity="0.55"/>
-        </svg>
-
-        <!-- Exhaust puffs (left/back of bus) -->
-        <div id="sp-exhaust">
-          <div class="sp-puff"></div>
-          <div class="sp-puff"></div>
-          <div class="sp-puff"></div>
-        </div>
-
-        <!-- Road -->
-        <div class="sp-road">
-          <div class="sp-road-dashes">
-            <div class="sp-dash-strip">
-              <!-- 20 dashes × 2 for seamless loop -->
-              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
-              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
-              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
-              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
-              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
-              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
-              <div class="sp-dash"></div><div class="sp-dash"></div>
-              <!-- duplicate for loop -->
-              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
-              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
-              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
-              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
-              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
-              <div class="sp-dash"></div><div class="sp-dash"></div><div class="sp-dash"></div>
-              <div class="sp-dash"></div><div class="sp-dash"></div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div><!-- /#pwa-splash -->
 
     <div id="root"></div>
 
     <script>
     (function () {
-      /* ── Only run in installed PWA (standalone) ── */
       var isStandalone =
         window.matchMedia('(display-mode: standalone)').matches ||
         window.navigator.standalone === true;
 
       if (!isStandalone) return;
 
-      var splash   = document.getElementById('pwa-splash');
-      var barFill  = document.getElementById('sp-bar-fill');
-      var barLabel = document.getElementById('sp-bar-label');
-      var bus      = document.getElementById('sp-bus');
-      var exhaust  = document.getElementById('sp-exhaust');
+      var splash  = document.getElementById('pwa-splash');
+      var statusEl = document.getElementById('sp-status');
 
       splash.style.display = 'flex';
 
-      /* ─────────────────────────────────────────────
-         JOURNEY ANIMATION
-         Total duration: 3200ms
-         Bus travels from off-screen left (-busW px)
-         to off-screen right (screenW px),
-         in sync with bar filling 0 → 100%.
-         Road dashes animate via CSS (always scroll).
-      ───────────────────────────────────────────── */
-      var DURATION = 3200;   // ms total journey
-      var busW     = 200;    // approximate bus pixel width
-      var start    = null;
+      /* Status messages timed across 3 seconds total */
+      var steps = [
+        { ms: 0,    text: 'Finding your ride\u2026' },
+        { ms: 900,  text: 'Locating drivers nearby\u2026' },
+        { ms: 1900, text: 'Almost ready\u2026' },
+        { ms: 2700, text: 'Let\u2019s go!' }
+      ];
 
-      function ease(t) {
-        /* ease-in-out: slow start, cruise, then slows before finish */
-        return t < 0.5
-          ? 2 * t * t
-          : -1 + (4 - 2 * t) * t;
-      }
+      steps.forEach(function(step) {
+        setTimeout(function() {
+          statusEl.style.opacity = '0';
+          setTimeout(function() {
+            statusEl.textContent = step.text;
+            statusEl.style.opacity = '1';
+          }, 120);
+        }, step.ms);
+      });
 
-      function tick(ts) {
-        if (!start) start = ts;
-        var elapsed = ts - start;
-        var raw     = Math.min(elapsed / DURATION, 1);   // 0 → 1 linear
-        var t       = ease(raw);                          // eased
-
-        /* ── Bar fill ── */
-        var pct = Math.round(t * 100);
-        barFill.style.width = pct + '%';
-
-        if (pct < 30)       barLabel.textContent = 'Starting engine…';
-        else if (pct < 60)  barLabel.textContent = 'On the road…';
-        else if (pct < 88)  barLabel.textContent = 'Almost there…';
-        else if (pct < 100) barLabel.textContent = 'Arriving…';
-        else                barLabel.textContent = 'Welcome!';
-
-        /* ── Bus position ──
-           Starts fully off-screen left: left = -busW
-           Ends fully off-screen right:  left = screenW
-           The bar track aligns with this travel range visually.
-        */
-        var screenW  = window.innerWidth;
-        var travelPx = screenW + busW;                    // total px to move
-        var leftPx   = -busW + t * travelPx;              // current left px
-        bus.style.left = leftPx + 'px';
-
-        /* Exhaust stays just behind (left of) bus rear */
-        exhaust.style.left = (leftPx - 16) + 'px';
-
-        /* ── Dash speed increases when bus goes faster ──
-           Faster in middle of journey (eased derivative peaks ~0.5)
-           We just drive CSS animation-duration dynamically */
-        var speed = 0.3 + (1 - Math.abs(raw - 0.5) * 2) * 0.5; // 0.3–0.8s range
-        var dashEl = document.querySelector('.sp-dash-strip');
-        if (dashEl) dashEl.style.animationDuration = (0.85 - speed * 0.5) + 's';
-
-        if (raw < 1) {
-          requestAnimationFrame(tick);
-        } else {
-          /* Journey complete — fade out splash */
-          setTimeout(function () {
-            splash.classList.add('fade-out');
-            setTimeout(function () {
-              splash.style.display = 'none';
-            }, 600);
-          }, 200);
-        }
-      }
-
-      /* Small delay so fonts load before animation starts */
+      /* Fade out at exactly 3 seconds */
       setTimeout(function () {
-        requestAnimationFrame(tick);
-      }, 200);
+        splash.classList.add('fade-out');
+        setTimeout(function () {
+          splash.style.display = 'none';
+        }, 420);
+      }, 3000);
     })();
     </script>
 
