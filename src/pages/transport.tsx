@@ -101,7 +101,7 @@ export default function TransportPage() {
   }, [from, vehicleType, location, sortBy, onlineOnly, page]);
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="w-full max-w-7xl mx-auto overflow-x-hidden">
 
       {/* ── HERO ──────────────────────────────────────────────────────── */}
       <div className="relative bg-[hsl(190,60%,10%)] px-4 pt-8 pb-6 overflow-hidden">
@@ -232,7 +232,7 @@ export default function TransportPage() {
         </div>
       </div>
 
-      <div className="px-4 py-5 max-w-7xl mx-auto">
+      <div className="px-4 py-5 w-full max-w-7xl mx-auto overflow-x-hidden">
 
         {activeTab === "live" && (
           <div className="max-w-2xl mx-auto animate-in fade-in duration-200"><LiveAvailabilityFeed /></div>

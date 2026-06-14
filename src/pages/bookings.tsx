@@ -33,7 +33,7 @@ export default function BookingsPage() {
   }, []);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pt-5 pb-24">
+    <div className="w-full max-w-lg mx-auto px-4 pt-5 pb-24">
       {activeBooking && (
         <BookingTracker
           booking={activeBooking}

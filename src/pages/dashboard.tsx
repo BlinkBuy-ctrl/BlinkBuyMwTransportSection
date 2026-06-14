@@ -114,7 +114,7 @@ export default function DashboardPage() {
   const onlineCount = listings.filter(l => l.is_online).length;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pt-5 pb-24">
+    <div className="w-full max-w-lg mx-auto px-4 pt-5 pb-24">
       {premiumTarget && (
         <PremiumUpgrade
           listingId={premiumTarget.id}

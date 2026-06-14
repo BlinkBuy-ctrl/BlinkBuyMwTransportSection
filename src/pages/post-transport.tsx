@@ -140,7 +140,7 @@ export default function PostTransportPage() {
 
   // ── SUCCESS ─────────────────────────────────────────────────────────────────
   if (done) return (
-    <div className="max-w-md mx-auto px-4 pt-10 pb-28">
+    <div className="w-full max-w-lg mx-auto px-4 pt-10 pb-36">
       <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
         <CheckCircle size={40} className="text-green-600"/>
       </div>
@@ -221,7 +221,7 @@ export default function PostTransportPage() {
   );
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-5 pb-28">
+    <div className="w-full max-w-lg mx-auto px-4 pt-5 pb-36">
       <div className="mb-5">
         <h1 className="text-xl font-black mb-0.5">List Your Vehicle</h1>
         <p className="text-xs text-muted-foreground flex items-center gap-1">
