@@ -50,7 +50,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     href === "/" ? loc === "/" || loc === "" : loc.startsWith(href);
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="min-h-screen w-full bg-background text-foreground flex flex-col overflow-x-hidden">
 
       {/* PWA Install Banner */}
       {showInstallBanner && (
@@ -81,7 +81,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* ── HEADER ─────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 bg-[hsl(215,55%,10%)] text-white shadow-xl border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="w-full px-4">
           <div className="flex items-center justify-between h-14">
 
             {/* Brand */}
@@ -179,7 +179,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* PAGE CONTENT */}
       <OfflineBanner />
       <main
-        className="flex-1 pb-16 lg:pb-0"
+        className="flex-1 pb-16 lg:pb-0 w-full overflow-x-hidden"
         style={{ opacity: pageVisible ? 1 : 0, transition: "opacity 120ms ease" }}
       >
         {children}
