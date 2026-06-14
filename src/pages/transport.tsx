@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import {
   Search, MapPin, Star, SlidersHorizontal, X,
   Car, Truck, Bus, Plane, Package, Zap,
-  Calendar, Plus, Bike, TrendingUp, Users, Shield
+  Calendar, Plus, Bike, TrendingUp, Users, Shield, LayoutDashboard
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import NearMe from "@/components/NearMe";
@@ -183,10 +183,10 @@ export default function TransportPage() {
               <Star size={12} className="text-amber-400 fill-amber-400"/>
               <span className="text-[11px] text-white/50">Verified & rated</span>
             </div>
-            <button onClick={() => setActiveTab("estimator")}
+            <Link href="/dashboard"
               className="flex items-center gap-1 text-teal-400 text-[11px] font-bold hover:text-teal-300 transition-colors ml-auto">
-              <Zap size={11}/> Fare estimate →
-            </button>
+              <LayoutDashboard size={11}/> Dashboard →
+            </Link>
           </div>
         </div>
       </div>
@@ -257,7 +257,7 @@ export default function TransportPage() {
                       <span className="text-2xl">{r.icon}</span>
                       <div className="min-w-0">
                         <div className="text-xs font-black text-foreground group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">{r.from} → {r.to}</div>
-                        <div className="text-[10px] text-muted-foreground mt-0.5">From {r.est}</div>
+
                       </div>
                     </button>
                   ))}
