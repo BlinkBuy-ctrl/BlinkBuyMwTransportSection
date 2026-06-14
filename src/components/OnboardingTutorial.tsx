@@ -29,6 +29,17 @@ function getRect(s: number): Rect | null {
   return { left: r.left, top: r.top, width: r.width, height: r.height };
 }
 
+function getEl(s: number): Element | null {
+  if (STEPS[s].isMenu) {
+    return Array.from(document.querySelectorAll("header button"))
+      .find(b => b.className.includes("lg:hidden")) ?? null;
+  }
+  const items = Array.from(document.querySelectorAll("nav a")).filter(a =>
+    a.closest("nav")?.className.includes("bottom-0")
+  );
+  return items[s - 1] ?? null;
+}
+
 function waitForRect(s: number, cb: (r: Rect) => void) {
   let tries = 0;
   const poll = () => {
@@ -63,91 +74,84 @@ export default function OnboardingTutorial() {
     waitForRect(step, r => setRect(r));
   }, [step, visible]);
 
+  // Auto-advance when the highlighted button is tapped
+  useEffect(() => {
+    if (!visible) return;
+    const el = getEl(step);
+    if (!el) return;
+    const handler = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      step < STEPS.length - 1 ? setStep(s => s + 1) : finish();
+    };
+    el.addEventListener("click", handler, true);
+    return () => el.removeEventListener("click", handler, true);
+  }, [step, visible]);
+
   const next   = () => step < STEPS.length - 1 ? setStep(s => s + 1) : finish();
   const finish = () => { setVisible(false); localStorage.setItem(KEY, "1"); };
 
   if (!visible || !rect) return null;
 
-  const cur     = STEPS[step];
-  const isMenu  = cur.isMenu;
-  const W       = window.innerWidth;
-  const H       = window.innerHeight;
-  const cx      = rect.left + rect.width  / 2;
-  const cy      = rect.top  + rect.height / 2;
+  const cur    = STEPS[step];
+  const isMenu = cur.isMenu;
+  const W      = window.innerWidth;
+  const H      = window.innerHeight;
+  const cx     = rect.left + rect.width  / 2;
+  const PAD    = 12;
+  const GAP    = 14; // gap between emoji and tooltip card
+  const HS     = 38; // emoji size px
 
-  // ── Tooltip placement ──────────────────────────────────────────────────────
-  // Menu button (top-right): tooltip below-left, arrow points UP-RIGHT
-  // Nav buttons (bottom bar): tooltip ABOVE, positioned left/center/right
-  // depending on which nav item so it never goes off-screen
-  const PAD = 12;
+  // Emoji position:
+  // menu  → right of button, pointing left (👈), vertically centred
+  // nav   → above button, pointing down (👇), horizontally centred
+  const emojiStyle: React.CSSProperties = isMenu
+    ? {
+        left:  rect.right + 8,
+        top:   rect.top + rect.height / 2 - HS / 2,
+        fontSize: HS,
+      }
+    : {
+        left:  cx - HS / 2,
+        top:   rect.top - HS - 6,
+        fontSize: HS,
+      };
+  const emojiChar = isMenu ? "👈" : "👇";
+  const emojiAnim = isMenu ? "tmw-right" : "tmw-up";
 
-  let tooltipStyle: React.CSSProperties;
-  // Arrow direction: which side of the tooltip card the pointer tip comes from
-  // "top" = arrow on top edge  "bottom" = arrow on bottom  "left" / "right"
-  let arrowSide: "top"|"bottom"|"left"|"right" = "bottom";
-  // Arrow horizontal offset within the card (% from left, for top/bottom arrows)
-  let arrowOffsetPct = 50; // default center
+  // Tooltip card:
+  // menu  → below header, full width
+  // nav   → above nav bar, full width; arrow offset tracks button cx
+  const cardW = W - PAD * 2;
+  const arrowPct = Math.min(88, Math.max(12, ((cx - PAD) / cardW) * 100));
 
-  if (isMenu) {
-    // Tooltip below the header bar, left-aligned, arrow top-right
-    tooltipStyle = { top: rect.bottom + 10, left: PAD, right: PAD };
-    arrowSide = "top";
-    // arrow offset: roughly where the menu button is relative to card width
-    const cardW = W - PAD * 2;
-    arrowOffsetPct = Math.min(90, Math.max(10, ((cx - PAD) / cardW) * 100));
-  } else {
-    // Tooltip above the nav bar
-    const cardBottom = rect.top - 10;
-    tooltipStyle = { bottom: H - cardBottom, left: PAD, right: PAD };
-    arrowSide = "bottom";
-    // horizontal offset aligns arrow with button center
-    const cardW = W - PAD * 2;
-    arrowOffsetPct = Math.min(90, Math.max(10, ((cx - PAD) / cardW) * 100));
-  }
+  const tooltipStyle: React.CSSProperties = isMenu
+    ? { top:    rect.bottom + HS + GAP,       left: PAD, right: PAD }
+    : { bottom: H - (rect.top - HS - GAP - 6), left: PAD, right: PAD };
 
-  // ── Arrow SVG (16×10, points toward the target) ───────────────────────────
-  const ARROW_COLOR = "#2dd4bf";
-  const arrowUp = (
-    // triangle pointing UP (for top arrow — toward menu button above)
-    <svg width="24" height="14" viewBox="0 0 24 14" fill="none" style={{
-      position:"absolute", top:-13, left:`calc(${arrowOffsetPct}% - 12px)`,
-      filter:"drop-shadow(0 -2px 4px rgba(45,212,191,.6))"
-    }}>
-      <polygon points="12,0 24,14 0,14" fill={ARROW_COLOR}/>
-    </svg>
-  );
-  const arrowDown = (
-    // triangle pointing DOWN (for bottom arrow — toward nav bar below)
-    <svg width="24" height="14" viewBox="0 0 24 14" fill="none" style={{
-      position:"absolute", bottom:-13, left:`calc(${arrowOffsetPct}% - 12px)`,
-      filter:"drop-shadow(0 2px 4px rgba(45,212,191,.6))"
-    }}>
-      <polygon points="12,14 24,0 0,0" fill={ARROW_COLOR}/>
-    </svg>
-  );
+  const ARROW = "#2dd4bf";
 
   return (
     <>
       <style>{`
-        @keyframes tmwGlow {
+        @keyframes tmwUp    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+        @keyframes tmwRight { 0%,100%{transform:translateX(0)} 50%{transform:translateX(7px)}  }
+        @keyframes tmwGlow  {
           0%,100%{ box-shadow:0 0 0 0px rgba(45,212,191,.9),0 0 16px 4px rgba(45,212,191,.5); }
           50%    { box-shadow:0 0 0 10px rgba(45,212,191,.2),0 0 32px 12px rgba(45,212,191,.7); }
         }
-        @keyframes tmwBounce {
-          0%,100%{ transform:translateY(0); }
-          50%    { transform:translateY(-5px); }
-        }
-        .tmw-glow   { animation: tmwGlow   1s ease-in-out infinite; }
-        .tmw-bounce { animation: tmwBounce .7s ease-in-out infinite; }
+        .tmw-up    { animation: tmwUp    .7s ease-in-out infinite; }
+        .tmw-right { animation: tmwRight .7s ease-in-out infinite; }
+        .tmw-glow  { animation: tmwGlow  1s  ease-in-out infinite; }
       `}</style>
 
       {/* 4-slice overlay */}
-      <div className="fixed inset-x-0 top-0 bg-black/60 pointer-events-none" style={{zIndex:80, height:Math.max(0,rect.top-6)}}/>
-      <div className="fixed inset-x-0 bg-black/60 pointer-events-none"       style={{zIndex:80, top:rect.top+rect.height+6, bottom:0}}/>
-      <div className="fixed bg-black/60 pointer-events-none"                  style={{zIndex:80, top:rect.top-6, height:rect.height+12, left:0, width:Math.max(0,rect.left-6)}}/>
-      <div className="fixed bg-black/60 pointer-events-none"                  style={{zIndex:80, top:rect.top-6, height:rect.height+12, left:rect.left+rect.width+6, right:0}}/>
+      <div className="fixed inset-x-0 top-0 bg-black/60 pointer-events-none" style={{zIndex:80,height:Math.max(0,rect.top-6)}}/>
+      <div className="fixed inset-x-0 bg-black/60 pointer-events-none"       style={{zIndex:80,top:rect.top+rect.height+6,bottom:0}}/>
+      <div className="fixed bg-black/60 pointer-events-none"                  style={{zIndex:80,top:rect.top-6,height:rect.height+12,left:0,width:Math.max(0,rect.left-6)}}/>
+      <div className="fixed bg-black/60 pointer-events-none"                  style={{zIndex:80,top:rect.top-6,height:rect.height+12,left:rect.left+rect.width+6,right:0}}/>
 
-      {/* Glow ring around target */}
+      {/* Glow ring */}
       <div className="tmw-glow fixed rounded-xl pointer-events-none" style={{
         zIndex:81,
         left:rect.left-6, top:rect.top-6,
@@ -156,21 +160,39 @@ export default function OnboardingTutorial() {
         transition:"left .3s,top .3s,width .3s,height .3s",
       }}/>
 
-      {/* Tooltip card with built-in arrow */}
+      {/* Emoji — sits between button and tooltip, z-95, ABOVE overlay but below tooltip */}
+      <div
+        className={`fixed pointer-events-none select-none ${emojiAnim}`}
+        style={{
+          ...emojiStyle,
+          zIndex: 95,
+          lineHeight: 1,
+          transition: "left .3s,top .3s",
+        }}
+      >
+        {emojiChar}
+      </div>
+
+      {/* Tooltip card — z-90 (BELOW emoji so emoji is never covered) */}
       <div className="fixed pointer-events-auto" style={{...tooltipStyle, zIndex:90}}>
         <div className="relative bg-[hsl(215,58%,10%)] border border-teal-400/60 rounded-2xl p-4 shadow-2xl">
-          {/* Arrow pointer */}
-          {arrowSide === "top"    && arrowUp}
-          {arrowSide === "bottom" && <div className="tmw-bounce" style={{position:"absolute",bottom:-13,left:`calc(${arrowOffsetPct}% - 12px)`}}>
-            <svg width="24" height="14" viewBox="0 0 24 14" fill="none" style={{filter:"drop-shadow(0 2px 6px rgba(45,212,191,.8))"}}>
-              <polygon points="12,14 24,0 0,0" fill={ARROW_COLOR}/>
-            </svg>
-          </div>}
-          {arrowSide === "top" && <div className="tmw-bounce" style={{position:"absolute",top:-13,left:`calc(${arrowOffsetPct}% - 12px)`}}>
-            <svg width="24" height="14" viewBox="0 0 24 14" fill="none" style={{filter:"drop-shadow(0 -2px 6px rgba(45,212,191,.8))"}}>
-              <polygon points="12,0 24,14 0,14" fill={ARROW_COLOR}/>
-            </svg>
-          </div>}
+
+          {/* Arrow pointing toward button */}
+          {isMenu ? (
+            // Arrow on TOP of card pointing up toward menu button
+            <div style={{position:"absolute",top:-13,left:`calc(${arrowPct}% - 12px)`}}>
+              <svg width="24" height="13" viewBox="0 0 24 13" fill="none">
+                <polygon points="12,0 24,13 0,13" fill={ARROW}/>
+              </svg>
+            </div>
+          ) : (
+            // Arrow on BOTTOM of card pointing down toward nav button
+            <div style={{position:"absolute",bottom:-13,left:`calc(${arrowPct}% - 12px)`}}>
+              <svg width="24" height="13" viewBox="0 0 24 13" fill="none">
+                <polygon points="12,13 24,0 0,0" fill={ARROW}/>
+              </svg>
+            </div>
+          )}
 
           {/* Step dots */}
           <div className="flex gap-1.5 mb-3">
