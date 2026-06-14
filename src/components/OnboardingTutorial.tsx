@@ -103,21 +103,14 @@ export default function OnboardingTutorial() {
   const HS     = 38; // emoji size px
 
   // Emoji position:
-  // menu  → right of button, pointing left (👈), vertically centred
-  // nav   → above button, pointing down (👇), horizontally centred
-  const emojiStyle: React.CSSProperties = isMenu
-    ? {
-        left:  rect.right + 8,
-        top:   rect.top + rect.height / 2 - HS / 2,
-        fontSize: HS,
-      }
-    : {
-        left:  cx - HS / 2,
-        top:   rect.top - HS - 6,
-        fontSize: HS,
-      };
-  const emojiChar = isMenu ? "👈" : "👇";
-  const emojiAnim = isMenu ? "tmw-right" : "tmw-up";
+  // both menu and nav → above the button, pointing down (👇)
+  const emojiStyle: React.CSSProperties = {
+    left:     cx - HS / 2,
+    top:      rect.top - HS - 6,
+    fontSize: HS,
+  };
+  const emojiChar = "👇";
+  const emojiAnim = "tmw-up";
 
   // Tooltip card:
   // menu  → below header, full width
@@ -125,8 +118,10 @@ export default function OnboardingTutorial() {
   const cardW = W - PAD * 2;
   const arrowPct = Math.min(88, Math.max(12, ((cx - PAD) / cardW) * 100));
 
+  // Tooltip always below the emoji+button area for menu (header is at top)
+  // and above the emoji+button area for nav (nav is at bottom)
   const tooltipStyle: React.CSSProperties = isMenu
-    ? { top:    rect.bottom + HS + GAP,       left: PAD, right: PAD }
+    ? { top:    rect.bottom + 10,              left: PAD, right: PAD }
     : { bottom: H - (rect.top - HS - GAP - 6), left: PAD, right: PAD };
 
   const ARROW = "#2dd4bf";
