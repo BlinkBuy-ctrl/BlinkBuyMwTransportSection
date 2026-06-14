@@ -6,7 +6,7 @@ import {
   Calendar, Plus, Bike, TrendingUp, Users, Shield
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import FareEstimator from "@/components/FareEstimator";
+import NearMe from "@/components/NearMe";
 import LiveAvailabilityFeed from "@/components/LiveAvailabilityFeed";
 import { ServiceCard } from "@/components/ServiceCard";
 
@@ -57,7 +57,7 @@ export default function TransportPage() {
   const [loading, setLoading]     = useState(true);
   const [total, setTotal]         = useState(0);
   const [page, setPage]           = useState(1);
-  const [activeTab, setActiveTab] = useState<"listings"|"live"|"estimator">("listings");
+  const [activeTab, setActiveTab] = useState<"listings"|"live"|"nearme">("listings");
   const [from, setFrom]           = useState("");
   const [vehicleType, setVehicleType] = useState("all");
   const [location, setLocation]   = useState("All Locations");
@@ -215,7 +215,7 @@ export default function TransportPage() {
           {([
             { key:"listings",  label:"Listings",       count: total },
             { key:"live",      label:"🟢 Live Now",    count: null  },
-            { key:"estimator", label:"💰 Fare Calc",   count: null  },
+            { key:"nearme",    label:"📍 Near Me",     count: null  },
           ] as const).map(tab => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
               className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold border-b-2 transition-all ${
@@ -237,8 +237,8 @@ export default function TransportPage() {
         {activeTab === "live" && (
           <div className="max-w-2xl mx-auto animate-in fade-in duration-200"><LiveAvailabilityFeed /></div>
         )}
-        {activeTab === "estimator" && (
-          <div className="max-w-lg mx-auto animate-in fade-in duration-200"><FareEstimator /></div>
+        {activeTab === "nearme" && (
+          <div className="max-w-2xl mx-auto animate-in fade-in duration-200"><NearMe /></div>
         )}
 
         {activeTab === "listings" && (
@@ -302,15 +302,19 @@ export default function TransportPage() {
 
             {/* Grid */}
             {loading ? (
-              <div className="columns-2 [column-gap:12px]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className="break-inside-avoid mb-3 bg-card border border-card-border rounded-2xl overflow-hidden animate-pulse">
-                    {i % 2 === 0 && <div className="w-full bg-muted" style={{aspectRatio:"4/5"}}/>}
-                    <div className="p-3 space-y-2">
-                      <div className="h-3 bg-muted rounded-lg w-4/5"/>
-                      <div className="h-2.5 bg-muted rounded-lg w-1/2"/>
-                      <div className="h-8 bg-muted rounded-xl mt-2"/>
+                  <div key={i} className="bg-card border border-card-border rounded-2xl p-4 animate-pulse">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="w-14 h-14 rounded-2xl bg-muted shrink-0"/>
+                      <div className="flex-1 space-y-2 pt-1">
+                        <div className="h-3.5 bg-muted rounded-lg w-4/5"/>
+                        <div className="h-2.5 bg-muted rounded-lg w-1/2"/>
+                        <div className="h-2.5 bg-muted rounded-lg w-2/3"/>
+                      </div>
                     </div>
+                    <div className="h-2.5 bg-muted rounded-lg mb-2"/>
+                    <div className="h-9 bg-muted rounded-xl"/>
                   </div>
                 ))}
               </div>
@@ -326,9 +330,9 @@ export default function TransportPage() {
               </div>
             ) : (
               <>
-                <div className="columns-2 [column-gap:12px]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {listings.map((l, i) => (
-                    <div key={l.id} className="break-inside-avoid mb-3"
+                    <div key={l.id}
                       style={{ animationDelay: `${i * 60}ms`, animation: "fadeUp 300ms ease both" }}>
                       <ServiceCard service={normalizeToServiceCard(l)} />
                     </div>
