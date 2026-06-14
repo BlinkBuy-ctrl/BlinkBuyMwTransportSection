@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 
 const STEPS = [
   { label: "menu",      isMenu: true,  title: "Quick Menu ☰",              desc: "Tap the three lines for notifications, messages, settings and more." },
@@ -16,7 +16,6 @@ interface Rect { left:number; top:number; width:number; height:number; }
 function getRect(s: number): Rect | null {
   let el: Element | null = null;
   if (STEPS[s].isMenu) {
-    // Find hamburger: any button inside header containing lg:hidden
     el = Array.from(document.querySelectorAll("header button"))
       .find(b => b.className.includes("lg:hidden")) ?? null;
   } else {
@@ -27,17 +26,16 @@ function getRect(s: number): Rect | null {
   }
   if (!el) return null;
   const r = el.getBoundingClientRect();
-  if (!r.width && !r.height) return null; // not painted yet
+  if (!r.width && !r.height) return null;
   return { left: r.left, top: r.top, width: r.width, height: r.height };
 }
 
-// Poll until element is found (handles slow renders & SPA navigation)
 function waitForRect(s: number, cb: (r: Rect) => void) {
   let tries = 0;
   const poll = () => {
     const r = getRect(s);
     if (r) { cb(r); return; }
-    if (++tries < 30) setTimeout(poll, 100); // up to 3s
+    if (++tries < 30) setTimeout(poll, 100);
   };
   poll();
 }
@@ -47,26 +45,25 @@ export default function OnboardingTutorial() {
   const [visible, setVisible] = useState(false);
   const [rect, setRect]       = useState<Rect | null>(null);
 
-  // Listen for custom event fired by settings page
+  // Listen for restart event (fired from settings after navigation to home)
   useEffect(() => {
     const handler = () => {
       setStep(0);
       setRect(null);
       setVisible(false);
-      // tiny delay so state resets before re-showing
-      setTimeout(() => waitForRect(0, r => { setRect(r); setVisible(true); }), 120);
+      setTimeout(() => waitForRect(0, r => { setRect(r); setVisible(true); }), 300);
     };
     window.addEventListener("tmw:restart-tutorial", handler);
     return () => window.removeEventListener("tmw:restart-tutorial", handler);
   }, []);
 
-  // First-visit check
+  // First-visit only
   useEffect(() => {
     if (localStorage.getItem(KEY)) return;
     waitForRect(0, r => { setRect(r); setVisible(true); });
   }, []);
 
-  // Update rect when step changes
+  // Update rect on step change
   useEffect(() => {
     if (!visible) return;
     waitForRect(step, r => setRect(r));
@@ -80,11 +77,11 @@ export default function OnboardingTutorial() {
   const cur    = STEPS[step];
   const isMenu = cur.isMenu;
   const cx     = rect.left + rect.width  / 2;
-  const HS     = 32; // hand size px
+  const HS     = 36;
 
-  const handX = isMenu ? rect.right + 2      : cx - HS / 2;
-  const handY = isMenu ? rect.bottom - HS     : rect.top - HS - 4;
-  const emoji = isMenu ? "👉"                : "👆";
+  const handX = isMenu ? rect.right + 2   : cx - HS / 2;
+  const handY = isMenu ? rect.bottom - HS : rect.top - HS - 4;
+  const emoji = isMenu ? "👉"             : "👆";
 
   const tooltipStyle: React.CSSProperties = isMenu
     ? { top: rect.bottom + 14 + "px", left: "12px", right: "12px" }
@@ -104,17 +101,17 @@ export default function OnboardingTutorial() {
         .tmw-glow  { animation: tmwGlow  .9s  ease-in-out infinite; }
       `}</style>
 
-      {/* 4-slice overlay leaving a clean hole over the target */}
-      <div className="fixed z-[80] inset-x-0 top-0 bg-black/75 pointer-events-none"
+      {/* 4-slice overlay */}
+      <div className="fixed z-[80] inset-x-0 top-0 bg-black/60 pointer-events-none"
            style={{ height: Math.max(0, rect.top - 6) }} />
-      <div className="fixed z-[80] inset-x-0 bg-black/75 pointer-events-none"
+      <div className="fixed z-[80] inset-x-0 bg-black/60 pointer-events-none"
            style={{ top: rect.top + rect.height + 6, bottom: 0 }} />
-      <div className="fixed z-[80] bg-black/75 pointer-events-none"
+      <div className="fixed z-[80] bg-black/60 pointer-events-none"
            style={{ top: rect.top - 6, height: rect.height + 12, left: 0, width: Math.max(0, rect.left - 6) }} />
-      <div className="fixed z-[80] bg-black/75 pointer-events-none"
+      <div className="fixed z-[80] bg-black/60 pointer-events-none"
            style={{ top: rect.top - 6, height: rect.height + 12, left: rect.left + rect.width + 6, right: 0 }} />
 
-      {/* Animated glow ring around target */}
+      {/* Glow ring */}
       <div className="tmw-glow fixed z-[81] rounded-xl pointer-events-none"
            style={{
              left: rect.left - 6, top: rect.top - 6,
@@ -123,29 +120,28 @@ export default function OnboardingTutorial() {
              transition: "left .3s,top .3s,width .3s,height .3s",
            }} />
 
-      {/* Hand */}
-      <div className={`fixed z-[82] pointer-events-none select-none ${isMenu ? "tmw-right" : "tmw-up"}`}
+      {/* Emoji hand — z-[90] so it's always above overlay */}
+      <div className={`fixed z-[90] pointer-events-none select-none ${isMenu ? "tmw-right" : "tmw-up"}`}
            style={{
              fontSize: HS, lineHeight: 1,
              left: handX, top: handY,
              transition: "left .35s cubic-bezier(.4,0,.2,1), top .35s cubic-bezier(.4,0,.2,1)",
-             filter: "drop-shadow(0 0 10px rgba(45,212,191,1))",
            }}>
         {emoji}
       </div>
 
       {/* Tooltip card */}
-      <div className="fixed z-[83] pointer-events-auto" style={tooltipStyle}>
+      <div className="fixed z-[91] pointer-events-auto" style={tooltipStyle}>
         <div className="bg-[hsl(215,58%,10%)] border border-teal-400/60 rounded-2xl p-4 shadow-2xl">
           <div className="flex gap-1.5 mb-3">
             {STEPS.map((_,i) => (
               <div key={i} className={`rounded-full transition-all duration-300 ${
-                i === step ? "w-6 h-2 bg-teal-400" : "w-2 h-2 bg-white/15"
+                i === step ? "w-6 h-2 bg-teal-400" : "w-2 h-2 bg-white/20"
               }`}/>
             ))}
           </div>
           <p className="text-white font-black text-sm mb-1">{cur.title}</p>
-          <p className="text-white/55 text-xs leading-relaxed mb-4">{cur.desc}</p>
+          <p className="text-white/70 text-xs leading-relaxed mb-4">{cur.desc}</p>
           <div className="flex items-center gap-3">
             <button onClick={finish}
               className="text-xs text-white/50 border border-white/15 px-3 py-2 rounded-xl hover:text-white hover:border-white/30 transition-all active:scale-95 font-semibold">
