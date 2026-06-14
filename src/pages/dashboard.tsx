@@ -8,7 +8,7 @@ import {
 import { supabase, authedClient } from "@/lib/supabase";
 import { getOrCreateIdentity } from "@/lib/identity";
 import PremiumUpgrade from "@/components/PremiumUpgrade";
-import FareEstimator from "@/components/FareEstimator";
+import FareEstimator from "@/components/NearMe";
 
 interface Listing {
   id: string;
