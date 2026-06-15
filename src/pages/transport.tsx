@@ -3,10 +3,9 @@ import { Link } from "wouter";
 import {
   Search, MapPin, Star, SlidersHorizontal, X,
   Car, Truck, Bus, Plane, Package, Zap,
-  Calendar, Plus, Bike, TrendingUp, Users, Shield, LayoutDashboard
+  Calendar, Plus, Bike, TrendingUp, Users, Shield
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { cachedFetch, cache } from "@/lib/cache";
 import NearMe from "@/components/NearMe";
 import LiveAvailabilityFeed from "@/components/LiveAvailabilityFeed";
 import { ServiceCard } from "@/components/ServiceCard";
@@ -81,55 +80,19 @@ export default function TransportPage() {
     const run = async () => {
       setLoading(true);
       try {
-        const cacheKey = `listings:${from}:${vehicleType}:${location}:${sortBy}:${onlineOnly}:${page}`;
-
-        // Show cached data instantly, then refresh in background
-        const cached = await cachedFetch(
-          cacheKey,
-          async () => {
-            let q = supabase.from("listings").select("*", { count: "exact" }).eq("status", "active");
-            if (from)                         q = q.ilike("title", `%${from}%`);
-            if (vehicleType !== "all")        q = q.eq("vehicle_type", vehicleType);
-            if (location !== "All Locations") q = q.ilike("location", `%${location}%`);
-            if (onlineOnly)                   q = q.eq("is_online", true);
-            if (sortBy === "rating")          q = q.order("rating", { ascending: false });
-            else if (sortBy === "price_asc")  q = q.order("price",  { ascending: true });
-            else if (sortBy === "price_desc") q = q.order("price",  { ascending: false });
-            else                              q = q.order("created_at", { ascending: false });
-            const pageSize = 12;
-            q = q.range((page - 1) * pageSize, page * pageSize - 1);
-            const { data, count } = await q;
-            return { data: data ?? [], count: count ?? 0 };
-          },
-          3 * 60 * 1000 // 3 min cache
-        );
-
-        if (mounted) { setListings(cached.data as Listing[]); setTotal(cached.count); }
-
-        // Background refresh — bust cache silently so next visit is fresh
-        cache.del(`listings:${from}:${vehicleType}:${location}:${sortBy}:${onlineOnly}:${page}`);
-        cachedFetch(
-          cacheKey,
-          async () => {
-            let q = supabase.from("listings").select("*", { count: "exact" }).eq("status", "active");
-            if (from)                         q = q.ilike("title", `%${from}%`);
-            if (vehicleType !== "all")        q = q.eq("vehicle_type", vehicleType);
-            if (location !== "All Locations") q = q.ilike("location", `%${location}%`);
-            if (onlineOnly)                   q = q.eq("is_online", true);
-            if (sortBy === "rating")          q = q.order("rating", { ascending: false });
-            else if (sortBy === "price_asc")  q = q.order("price",  { ascending: true });
-            else if (sortBy === "price_desc") q = q.order("price",  { ascending: false });
-            else                              q = q.order("created_at", { ascending: false });
-            const pageSize = 12;
-            q = q.range((page - 1) * pageSize, page * pageSize - 1);
-            const { data, count } = await q;
-            return { data: data ?? [], count: count ?? 0 };
-          },
-          3 * 60 * 1000
-        ).then(fresh => {
-          if (mounted) { setListings(fresh.data as Listing[]); setTotal(fresh.count); }
-        }).catch(() => {});
-
+        let q = supabase.from("listings").select("*", { count: "exact" }).eq("status", "active");
+        if (from)                         q = q.ilike("title", `%${from}%`);
+        if (vehicleType !== "all")        q = q.eq("vehicle_type", vehicleType);
+        if (location !== "All Locations") q = q.ilike("location", `%${location}%`);
+        if (onlineOnly)                   q = q.eq("is_online", true);
+        if (sortBy === "rating")          q = q.order("rating", { ascending: false });
+        else if (sortBy === "price_asc")  q = q.order("price",  { ascending: true });
+        else if (sortBy === "price_desc") q = q.order("price",  { ascending: false });
+        else                              q = q.order("created_at", { ascending: false });
+        const pageSize = 12;
+        q = q.range((page - 1) * pageSize, page * pageSize - 1);
+        const { data, count } = await q;
+        if (mounted) { setListings((data ?? []) as Listing[]); setTotal(count ?? 0); }
       } catch { if (mounted) { setListings([]); setTotal(0); } }
       finally  { if (mounted) setLoading(false); }
     };
@@ -220,10 +183,10 @@ export default function TransportPage() {
               <Star size={12} className="text-amber-400 fill-amber-400"/>
               <span className="text-[11px] text-white/50">Verified & rated</span>
             </div>
-            <Link href="/dashboard"
+            <button onClick={() => setActiveTab("estimator")}
               className="flex items-center gap-1 text-teal-400 text-[11px] font-bold hover:text-teal-300 transition-colors ml-auto">
-              <LayoutDashboard size={11}/> Dashboard →
-            </Link>
+              <Zap size={11}/> Fare estimate →
+            </button>
           </div>
         </div>
       </div>
@@ -294,7 +257,7 @@ export default function TransportPage() {
                       <span className="text-2xl">{r.icon}</span>
                       <div className="min-w-0">
                         <div className="text-xs font-black text-foreground group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">{r.from} → {r.to}</div>
-
+                        <div className="text-[10px] text-muted-foreground mt-0.5">From {r.est}</div>
                       </div>
                     </button>
                   ))}
