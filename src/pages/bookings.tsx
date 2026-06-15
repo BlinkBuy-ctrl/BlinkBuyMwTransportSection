@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { Clock, MapPin, Calendar, Car, CheckCircle, X, Zap, ArrowRight } from "lucide-react";
+import { Clock, MapPin, Calendar, Car, CheckCircle, X, Zap, ArrowRight, RefreshCw } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { getOrCreateIdentity } from "@/lib/identity";
+import { cachedFetch, cache } from "@/lib/cache";
 import BookingTracker, { type BookingInfo, type BookingStatus } from "@/components/BookingTracker";
 
 const STATUS_CONFIG: Record<string, { label:string; color:string; icon: any }> = {
@@ -17,20 +18,45 @@ const STATUS_CONFIG: Record<string, { label:string; color:string; icon: any }> =
 export default function BookingsPage() {
   const [bookings, setBookings]           = useState<any[]>([]);
   const [loading, setLoading]             = useState(true);
+  const [refreshing, setRefreshing]       = useState(false);
   const [activeBooking, setActiveBooking] = useState<BookingInfo|null>(null);
 
+  const fetchBookings = async (bust = false) => {
+    const identity = await getOrCreateIdentity();
+    const cacheKey = `bookings:${identity.token}`;
+    if (bust) cache.del(cacheKey);
+
+    const data = await cachedFetch(
+      cacheKey,
+      async () => {
+        const { data } = await supabase
+          .from("bookings")
+          .select("*, listing:listing_id(title, vehicle_type, whatsapp, phone, price_display, price)")
+          .eq("booker_token", identity.token)
+          .order("created_at", { ascending: false });
+        return data ?? [];
+      },
+      2 * 60 * 1000 // 2 min cache — bookings change often enough
+    );
+
+    setBookings(data);
+  };
+
+  // Initial load — show cached instantly, then quietly refresh in background
   useEffect(() => {
     (async () => {
-      const identity = await getOrCreateIdentity();
-      const { data } = await supabase
-        .from("bookings")
-        .select("*, listing:listing_id(title, vehicle_type, whatsapp, phone, price_display, price)")
-        .eq("booker_token", identity.token)
-        .order("created_at", { ascending: false });
-      setBookings(data ?? []);
+      await fetchBookings();
       setLoading(false);
+      // background refresh to get latest status without blocking UI
+      fetchBookings(true).catch(() => {});
     })();
   }, []);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchBookings(true);
+    setRefreshing(false);
+  };
 
   return (
     <div className="w-full max-w-lg mx-auto px-4 pt-5 pb-24">
@@ -42,7 +68,17 @@ export default function BookingsPage() {
         />
       )}
 
-      <h1 className="text-xl font-black mb-5">My Bookings</h1>
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="text-xl font-black">My Bookings</h1>
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-teal-600 transition-colors disabled:opacity-40"
+        >
+          <RefreshCw size={13} className={refreshing ? "animate-spin" : ""}/>
+          {refreshing ? "Refreshing…" : "Refresh"}
+        </button>
+      </div>
 
       {loading ? (
         <div className="space-y-3">

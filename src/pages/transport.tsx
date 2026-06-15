@@ -6,6 +6,7 @@ import {
   Calendar, Plus, Bike, TrendingUp, Users, Shield, LayoutDashboard
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { cachedFetch, cache } from "@/lib/cache";
 import NearMe from "@/components/NearMe";
 import LiveAvailabilityFeed from "@/components/LiveAvailabilityFeed";
 import { ServiceCard } from "@/components/ServiceCard";
@@ -80,19 +81,55 @@ export default function TransportPage() {
     const run = async () => {
       setLoading(true);
       try {
-        let q = supabase.from("listings").select("*", { count: "exact" }).eq("status", "active");
-        if (from)                         q = q.ilike("title", `%${from}%`);
-        if (vehicleType !== "all")        q = q.eq("vehicle_type", vehicleType);
-        if (location !== "All Locations") q = q.ilike("location", `%${location}%`);
-        if (onlineOnly)                   q = q.eq("is_online", true);
-        if (sortBy === "rating")          q = q.order("rating", { ascending: false });
-        else if (sortBy === "price_asc")  q = q.order("price",  { ascending: true });
-        else if (sortBy === "price_desc") q = q.order("price",  { ascending: false });
-        else                              q = q.order("created_at", { ascending: false });
-        const pageSize = 12;
-        q = q.range((page - 1) * pageSize, page * pageSize - 1);
-        const { data, count } = await q;
-        if (mounted) { setListings((data ?? []) as Listing[]); setTotal(count ?? 0); }
+        const cacheKey = `listings:${from}:${vehicleType}:${location}:${sortBy}:${onlineOnly}:${page}`;
+
+        // Show cached data instantly, then refresh in background
+        const cached = await cachedFetch(
+          cacheKey,
+          async () => {
+            let q = supabase.from("listings").select("*", { count: "exact" }).eq("status", "active");
+            if (from)                         q = q.ilike("title", `%${from}%`);
+            if (vehicleType !== "all")        q = q.eq("vehicle_type", vehicleType);
+            if (location !== "All Locations") q = q.ilike("location", `%${location}%`);
+            if (onlineOnly)                   q = q.eq("is_online", true);
+            if (sortBy === "rating")          q = q.order("rating", { ascending: false });
+            else if (sortBy === "price_asc")  q = q.order("price",  { ascending: true });
+            else if (sortBy === "price_desc") q = q.order("price",  { ascending: false });
+            else                              q = q.order("created_at", { ascending: false });
+            const pageSize = 12;
+            q = q.range((page - 1) * pageSize, page * pageSize - 1);
+            const { data, count } = await q;
+            return { data: data ?? [], count: count ?? 0 };
+          },
+          3 * 60 * 1000 // 3 min cache
+        );
+
+        if (mounted) { setListings(cached.data as Listing[]); setTotal(cached.count); }
+
+        // Background refresh — bust cache silently so next visit is fresh
+        cache.del(`listings:${from}:${vehicleType}:${location}:${sortBy}:${onlineOnly}:${page}`);
+        cachedFetch(
+          cacheKey,
+          async () => {
+            let q = supabase.from("listings").select("*", { count: "exact" }).eq("status", "active");
+            if (from)                         q = q.ilike("title", `%${from}%`);
+            if (vehicleType !== "all")        q = q.eq("vehicle_type", vehicleType);
+            if (location !== "All Locations") q = q.ilike("location", `%${location}%`);
+            if (onlineOnly)                   q = q.eq("is_online", true);
+            if (sortBy === "rating")          q = q.order("rating", { ascending: false });
+            else if (sortBy === "price_asc")  q = q.order("price",  { ascending: true });
+            else if (sortBy === "price_desc") q = q.order("price",  { ascending: false });
+            else                              q = q.order("created_at", { ascending: false });
+            const pageSize = 12;
+            q = q.range((page - 1) * pageSize, page * pageSize - 1);
+            const { data, count } = await q;
+            return { data: data ?? [], count: count ?? 0 };
+          },
+          3 * 60 * 1000
+        ).then(fresh => {
+          if (mounted) { setListings(fresh.data as Listing[]); setTotal(fresh.count); }
+        }).catch(() => {});
+
       } catch { if (mounted) { setListings([]); setTotal(0); } }
       finally  { if (mounted) setLoading(false); }
     };
