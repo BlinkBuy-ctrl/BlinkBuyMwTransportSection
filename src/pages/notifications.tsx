@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useLocation } from "wouter";
 import { Bell, Zap, CheckCircle, Calendar, Star, Info } from "lucide-react";
-import { supabase, authedClient } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { getOrCreateIdentity } from "@/lib/identity";
 
 interface Notif {
@@ -29,27 +30,67 @@ function timeAgo(iso: string) {
 }
 
 export default function NotificationsPage() {
+  const [, navigate]  = useLocation();
   const [notifs, setNotifs]   = useState<Notif[]>([]);
   const [loading, setLoading] = useState(true);
+  // FIX: token stored in ref — accessible in markRead without being in closure scope
+  // This was the crash: markRead used `identity` variable that only existed inside useEffect
+  const tokenRef = useRef<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
-      const identity = await getOrCreateIdentity();
-      const { data } = await supabase
-        .from("operator_notifications")
-        .select("*")
-        .eq("operator_token", identity.token)
-        .order("created_at", { ascending: false })
-        .limit(50);
-      setNotifs((data ?? []) as Notif[]);
-      setLoading(false);
+      try {
+        const identity = await getOrCreateIdentity();
+        tokenRef.current = identity.token;
+        if (cancelled) return;
+        const { data } = await supabase
+          .from("operator_notifications")
+          .select("*")
+          .eq("operator_token", identity.token)
+          .order("created_at", { ascending: false })
+          .limit(50);
+        if (!cancelled) setNotifs((data ?? []) as Notif[]);
+      } catch { /* ignore network errors */ }
+      finally { if (!cancelled) setLoading(false); }
     })();
+    return () => { cancelled = true; };
   }, []);
 
-  const markRead = async (id: string) => {
-    setNotifs(prev => prev.map(n => n.id === id ? {...n, read: true} : n));
-    if (!identity?.token) return;
-    await authedClient(identity.token).from("operator_notifications").update({ read: true }).eq("id", id);
+  const markRead = async (n: Notif) => {
+    // Optimistic update first — UI responds immediately, no waiting
+    setNotifs(prev => prev.map(x => x.id === n.id ? {...x, read: true} : x));
+    // Persist silently — failure won't crash
+    try {
+      const token = tokenRef.current;
+      if (token) {
+        await supabase
+          .from("operator_notifications")
+          .update({ read: true })
+          .eq("id", n.id)
+          .eq("operator_token", token);
+      }
+    } catch { /* ignore */ }
+    // Navigate using wouter for internal links — prevents full page reload crash
+    if (n.link) {
+      try {
+        n.link.startsWith("/") ? navigate(n.link) : window.open(n.link, "_blank", "noopener,noreferrer");
+      } catch { /* ignore bad links */ }
+    }
+  };
+
+  const markAllRead = async () => {
+    setNotifs(prev => prev.map(n => ({...n, read: true})));
+    try {
+      const token = tokenRef.current;
+      if (token) {
+        await supabase
+          .from("operator_notifications")
+          .update({ read: true })
+          .eq("operator_token", token)
+          .eq("read", false);
+      }
+    } catch { /* ignore */ }
   };
 
   const unread = notifs.filter(n => !n.read).length;
@@ -59,22 +100,10 @@ export default function NotificationsPage() {
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-xl font-black">Notifications</h1>
-          {unread > 0 && (
-            <p className="text-xs text-muted-foreground">{unread} unread</p>
-          )}
+          {unread > 0 && <p className="text-xs text-muted-foreground">{unread} unread</p>}
         </div>
         {unread > 0 && (
-          <button
-            onClick={async () => {
-              const identity = await getOrCreateIdentity();
-              setNotifs(prev => prev.map(n => ({...n, read: true})));
-              await supabase.from("operator_notifications")
-                .update({ read: true })
-                .eq("operator_token", identity.token)
-                .eq("read", false);
-            }}
-            className="text-xs text-teal-600 font-bold hover:underline"
-          >
+          <button onClick={markAllRead} className="text-xs text-teal-600 font-bold hover:underline">
             Mark all read
           </button>
         )}
@@ -97,7 +126,7 @@ export default function NotificationsPage() {
             const Icon = cfg.icon;
             return (
               <div key={n.id}
-                onClick={() => { markRead(n.id); if (n.link) window.location.href = n.link; }}
+                onClick={() => markRead(n)}
                 className={`flex items-start gap-3 p-3.5 rounded-xl border transition-all cursor-pointer hover:border-teal-400/50 active:scale-[0.99] ${
                   n.read ? "border-border bg-card" : "border-teal-200 dark:border-teal-800 bg-teal-50/50 dark:bg-teal-900/10"
                 }`}>
@@ -110,6 +139,7 @@ export default function NotificationsPage() {
                     <span className="text-[10px] text-muted-foreground shrink-0">{timeAgo(n.created_at)}</span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{n.message}</p>
+                  {n.link && <span className="text-[10px] text-teal-600 dark:text-teal-400 font-semibold mt-1 block">Tap to view →</span>}
                 </div>
                 {!n.read && <div className="w-2 h-2 rounded-full bg-teal-500 shrink-0 mt-1.5"/>}
               </div>

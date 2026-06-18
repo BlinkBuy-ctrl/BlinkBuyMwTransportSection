@@ -8,6 +8,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { fetchListingImages } from "@/hooks/useListingImages";
 import type { ListingImage } from "@/hooks/useListingImages";
+import { getOrCreateIdentity, getDisplayName } from "@/lib/identity";
 
 const EMOJI: Record<string,string> = {
   "Taxi":"🚕","Motorcycle":"🏍️","Minibus":"🚌","Shuttle":"🚐","Hire Car":"🚗",
@@ -27,10 +28,9 @@ interface Review {
   id:string; rating:number; comment?:string; reviewer_name?:string; created_at:string;
 }
 
-// ── Gallery ──────────────────────────────────────────────────────────────────
 function Gallery({ images, vehicleType }: { images:ListingImage[]; vehicleType:string }) {
-  const [cur, setCur]       = useState(0);
-  const [lightbox, setLb]   = useState(false);
+  const [cur, setCur]   = useState(0);
+  const [lightbox, setLb] = useState(false);
 
   if (!images.length) return (
     <div className="w-full h-52 bg-gradient-to-br from-card to-muted rounded-2xl flex flex-col items-center justify-center gap-2 border border-card-border">
@@ -47,7 +47,6 @@ function Gallery({ images, vehicleType }: { images:ListingImage[]; vehicleType:s
         <img src={images[cur].url} alt={`photo ${cur+1}`}
           className="w-full h-full object-cover cursor-zoom-in" onClick={() => setLb(true)}/>
         <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/50 to-transparent pointer-events-none"/>
-
         {images.length > 1 && <>
           <button onClick={() => setCur(i => (i-1+images.length)%images.length)}
             className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white hover:bg-black/70 transition-all active:scale-95">
@@ -64,12 +63,10 @@ function Gallery({ images, vehicleType }: { images:ListingImage[]; vehicleType:s
             ))}
           </div>
         </>}
-
         <div className="absolute top-2 right-2 bg-black/50 backdrop-blur text-white text-[10px] font-bold px-2 py-1 rounded-full">
           {cur+1}/{images.length}
         </div>
       </div>
-
       {images.length > 1 && (
         <div className="flex gap-2 mt-2">
           {images.map((img,i) => (
@@ -80,7 +77,6 @@ function Gallery({ images, vehicleType }: { images:ListingImage[]; vehicleType:s
           ))}
         </div>
       )}
-
       {lightbox && (
         <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center" onClick={() => setLb(false)}>
           <img src={images[cur].url} alt="" className="max-w-full max-h-full object-contain p-4"/>
@@ -103,11 +99,10 @@ function Stars({ rating, size=13 }: { rating:number; size?:number }) {
   );
 }
 
-// ── Page ─────────────────────────────────────────────────────────────────────
 export default function TransportDetailPage() {
-  const [, params]    = useRoute("/transport/:id");
-  const [, setLoc]    = useLocation();
-  const id            = params?.id;
+  const [, params]  = useRoute("/transport/:id");
+  const [, setLoc]  = useLocation();
+  const id          = params?.id;
 
   const [listing, setListing]   = useState<Listing|null>(null);
   const [images, setImages]     = useState<ListingImage[]>([]);
@@ -115,26 +110,24 @@ export default function TransportDetailPage() {
   const [loading, setLoading]   = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  // Booking form
-  const [showBook, setShowBook]   = useState(false);
-  const [bFrom, setBFrom]         = useState("");
-  const [bTo, setBTo]             = useState("");
-  const [bDate, setBDate]         = useState("");
-  const [bName, setBName]         = useState("");
-  const [bPhone, setBPhone]       = useState("");
-  const [bPax, setBPax]           = useState("1");
-  const [bLoading, setBLoading]   = useState(false);
-  const [bDone, setBDone]         = useState(false);
-  const [bError, setBError]       = useState("");
+  const [showBook, setShowBook] = useState(false);
+  const [bFrom, setBFrom]       = useState("");
+  const [bTo, setBTo]           = useState("");
+  const [bDate, setBDate]       = useState("");
+  const [bName, setBName]       = useState("");
+  const [bPhone, setBPhone]     = useState("");
+  const [bPax, setBPax]         = useState("1");
+  const [bLoading, setBLoading] = useState(false);
+  const [bDone, setBDone]       = useState(false);
+  const [bError, setBError]     = useState("");
 
-  // Review form
-  const [showReview, setShowReview]   = useState(false);
-  const [rRating, setRRating]         = useState(5);
-  const [rComment, setRComment]       = useState("");
-  const [rName, setRName]             = useState("");
-  const [rLoading, setRLoading]       = useState(false);
-  const [rDone, setRDone]             = useState(false);
-  const [rError, setRError]           = useState("");
+  const [showReview, setShowReview] = useState(false);
+  const [rRating, setRRating]       = useState(5);
+  const [rComment, setRComment]     = useState("");
+  const [rName, setRName]           = useState("");
+  const [rLoading, setRLoading]     = useState(false);
+  const [rDone, setRDone]           = useState(false);
+  const [rError, setRError]         = useState("");
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -154,6 +147,13 @@ export default function TransportDetailPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Pre-fill name from saved profile
+  useEffect(() => {
+    const name = getDisplayName();
+    if (name && !bName) setBName(name);
+  }, []);
+
+  // ── BOOKING FIX: use getOrCreateIdentity() so token always matches bookings page ──
   const submitBooking = async () => {
     if (!listing) return;
     if (!bFrom.trim()||!bTo.trim()||!bName.trim()||!bPhone.trim()) {
@@ -161,13 +161,18 @@ export default function TransportDetailPage() {
     }
     setBLoading(true); setBError("");
     try {
-      const token = localStorage.getItem("operator_token") ?? crypto.randomUUID();
+      const identity = await getOrCreateIdentity();        // ← correct token
       const { error } = await supabase.from("bookings").insert({
-        listing_id: listing.id, booker_token: token,
-        booker_name: bName, booker_phone: bPhone,
-        from_location: bFrom, to_location: bTo,
-        trip_date: bDate||null, passengers: Number(bPax),
-        payment_method: "cash", status: "requesting",
+        listing_id:     listing.id,
+        booker_token:   identity.token,                    // ← was localStorage.getItem("operator_token") — WRONG KEY
+        booker_name:    bName.trim(),
+        booker_phone:   bPhone.trim(),
+        from_location:  bFrom.trim(),
+        to_location:    bTo.trim(),
+        trip_date:      bDate || null,
+        passengers:     Number(bPax),
+        payment_method: "cash",
+        status:         "requesting",
       });
       if (error) throw new Error(error.message);
       setBDone(true);
@@ -179,11 +184,13 @@ export default function TransportDetailPage() {
     if (!listing) return;
     setRLoading(true); setRError("");
     try {
-      const token = localStorage.getItem("operator_token") ?? crypto.randomUUID();
+      const identity = await getOrCreateIdentity();        // ← correct token
       const { error } = await supabase.from("reviews").insert({
-        listing_id: listing.id, reviewer_token: token,
-        reviewer_name: rName.trim()||"Anonymous",
-        rating: rRating, comment: rComment.trim()||null,
+        listing_id:     listing.id,
+        reviewer_token: identity.token,                    // ← was localStorage.getItem("operator_token") — WRONG KEY
+        reviewer_name:  rName.trim()||"Anonymous",
+        rating:         rRating,
+        comment:        rComment.trim()||null,
       });
       if (error) {
         if (error.code==="23505") throw new Error("You've already reviewed this listing.");
@@ -225,8 +232,6 @@ export default function TransportDetailPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-4 pb-32">
-
-      {/* Back + actions */}
       <div className="flex items-center justify-between mb-4">
         <button onClick={() => setLoc("/transport")}
           className="flex items-center gap-1 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
@@ -243,12 +248,10 @@ export default function TransportDetailPage() {
         </div>
       </div>
 
-      {/* ── Gallery ── */}
       <div className="mb-4">
         <Gallery images={images} vehicleType={listing.vehicle_type}/>
       </div>
 
-      {/* Premium ribbon */}
       {(listing.is_premium||listing.is_featured) && (
         <div className={`flex items-center justify-center gap-1.5 py-1.5 text-[10px] font-black tracking-widest uppercase text-white rounded-xl mb-3 ${
           listing.is_premium
@@ -259,7 +262,6 @@ export default function TransportDetailPage() {
         </div>
       )}
 
-      {/* Title */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
@@ -284,7 +286,6 @@ export default function TransportDetailPage() {
         )}
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-3 gap-2 mb-4">
         <div className="bg-card border border-card-border rounded-xl p-2.5 text-center">
           <Stars rating={rating} size={10}/>
@@ -302,7 +303,6 @@ export default function TransportDetailPage() {
         </div>
       </div>
 
-      {/* Badges */}
       <div className="flex flex-wrap gap-1.5 mb-4">
         {listing.is_verified && (
           <span className="flex items-center gap-1 text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-full font-bold border border-blue-200/50 dark:border-blue-700/30">
@@ -321,7 +321,6 @@ export default function TransportDetailPage() {
         ))}
       </div>
 
-      {/* Description */}
       {listing.description && (
         <div className="bg-card border border-card-border rounded-2xl p-4 mb-4">
           <h3 className="text-xs font-black uppercase tracking-wide text-muted-foreground mb-2">About This Service</h3>
@@ -329,7 +328,6 @@ export default function TransportDetailPage() {
         </div>
       )}
 
-      {/* Contact */}
       <div className="flex gap-2 mb-4">
         {listing.phone && (
           <a href={`tel:+265${listing.phone}`}
@@ -346,13 +344,11 @@ export default function TransportDetailPage() {
         )}
       </div>
 
-      {/* Book button */}
       <button onClick={() => { setShowBook(!showBook); setBDone(false); setBError(""); }}
         className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-black text-sm transition-all active:scale-95 mb-4">
         <Zap size={15}/> {showBook ? "Hide Form" : "Book This Ride"}
       </button>
 
-      {/* ── Booking form ── */}
       {showBook && !bDone && (
         <div className="bg-card border border-card-border rounded-2xl p-4 mb-4 space-y-3 animate-in fade-in duration-200">
           <h3 className="text-sm font-black flex items-center gap-2"><Calendar size={14} className="text-teal-500"/> Book a Ride</h3>
@@ -402,6 +398,7 @@ export default function TransportDetailPage() {
           <CheckCircle2 size={32} className="text-green-600 mx-auto mb-2"/>
           <h3 className="text-sm font-black text-green-700 dark:text-green-400 mb-1">Booking Request Sent!</h3>
           <p className="text-xs text-green-600 dark:text-green-500">The driver will contact you shortly.</p>
+          <p className="text-xs text-muted-foreground mt-1">Check <strong>Bookings</strong> tab to track your ride.</p>
           {listing.whatsapp && (
             <a href={`https://wa.me/265${listing.whatsapp}?text=Hi! I just sent a booking request on TransportMW.`}
               target="_blank" rel="noopener noreferrer"
@@ -412,7 +409,6 @@ export default function TransportDetailPage() {
         </div>
       )}
 
-      {/* ── Reviews ── */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-black flex items-center gap-2">
@@ -478,7 +474,6 @@ export default function TransportDetailPage() {
         )}
       </div>
 
-      {/* ── Sticky CTA ── */}
       <div className="fixed bottom-14 lg:bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur border-t border-border px-4 py-3">
         <div className="max-w-lg mx-auto flex gap-2 items-center">
           <div className="flex-1">

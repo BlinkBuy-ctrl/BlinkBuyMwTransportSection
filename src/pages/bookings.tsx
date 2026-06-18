@@ -3,16 +3,15 @@ import { Link } from "wouter";
 import { Clock, MapPin, Calendar, Car, CheckCircle, X, Zap, ArrowRight, RefreshCw } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { getOrCreateIdentity } from "@/lib/identity";
-import { cachedFetch, cache } from "@/lib/cache";
 import BookingTracker, { type BookingInfo, type BookingStatus } from "@/components/BookingTracker";
 
 const STATUS_CONFIG: Record<string, { label:string; color:string; icon: any }> = {
-  requesting: { label:"Pending",   color:"text-amber-600 bg-amber-100 dark:bg-amber-900/30",  icon:Clock },
-  accepted:   { label:"Accepted",  color:"text-blue-600 bg-blue-100 dark:bg-blue-900/30",    icon:CheckCircle },
-  en_route:   { label:"En Route",  color:"text-purple-600 bg-purple-100 dark:bg-purple-900/30", icon:Zap },
-  arrived:    { label:"Arrived",   color:"text-green-600 bg-green-100 dark:bg-green-900/30", icon:MapPin },
-  completed:  { label:"Completed", color:"text-green-700 bg-green-100 dark:bg-green-900/30", icon:CheckCircle },
-  cancelled:  { label:"Cancelled", color:"text-red-600 bg-red-100 dark:bg-red-900/30",      icon:X },
+  requesting: { label:"Pending",   color:"text-amber-600 bg-amber-100 dark:bg-amber-900/30",   icon:Clock },
+  accepted:   { label:"Accepted",  color:"text-blue-600 bg-blue-100 dark:bg-blue-900/30",      icon:CheckCircle },
+  en_route:   { label:"En Route",  color:"text-purple-600 bg-purple-100 dark:bg-purple-900/30",icon:Zap },
+  arrived:    { label:"Arrived",   color:"text-green-600 bg-green-100 dark:bg-green-900/30",   icon:MapPin },
+  completed:  { label:"Completed", color:"text-green-700 bg-green-100 dark:bg-green-900/30",   icon:CheckCircle },
+  cancelled:  { label:"Cancelled", color:"text-red-600 bg-red-100 dark:bg-red-900/30",         icon:X },
 };
 
 export default function BookingsPage() {
@@ -21,40 +20,29 @@ export default function BookingsPage() {
   const [refreshing, setRefreshing]       = useState(false);
   const [activeBooking, setActiveBooking] = useState<BookingInfo|null>(null);
 
-  const fetchBookings = async (bust = false) => {
-    const identity = await getOrCreateIdentity();
-    const cacheKey = `bookings:${identity.token}`;
-    if (bust) cache.del(cacheKey);
-
-    const data = await cachedFetch(
-      cacheKey,
-      async () => {
-        const { data } = await supabase
-          .from("bookings")
-          .select("*, listing:listing_id(title, vehicle_type, whatsapp, phone, price_display, price)")
-          .eq("booker_token", identity.token)
-          .order("created_at", { ascending: false });
-        return data ?? [];
-      },
-      2 * 60 * 1000 // 2 min cache — bookings change often enough
-    );
-
-    setBookings(data);
+  // NO cache — always fetch fresh so new bookings appear immediately
+  const fetchBookings = async () => {
+    try {
+      const identity = await getOrCreateIdentity();
+      const { data } = await supabase
+        .from("bookings")
+        .select("*, listing:listing_id(title, vehicle_type, whatsapp, phone, price_display, price)")
+        .eq("booker_token", identity.token)
+        .order("created_at", { ascending: false });
+      setBookings(data ?? []);
+    } catch { /* network error — keep existing list */ }
   };
 
-  // Initial load — show cached instantly, then quietly refresh in background
   useEffect(() => {
     (async () => {
       await fetchBookings();
       setLoading(false);
-      // background refresh to get latest status without blocking UI
-      fetchBookings(true).catch(() => {});
     })();
   }, []);
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchBookings(true);
+    await fetchBookings();
     setRefreshing(false);
   };
 
@@ -130,9 +118,10 @@ export default function BookingsPage() {
                 </div>
                 <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
                   {b.trip_date && (
-                    <span className="flex items-center gap-1"><Calendar size={9}/>{b.trip_date} {b.trip_time}</span>
+                    <span className="flex items-center gap-1"><Calendar size={9}/>{b.trip_date}{b.trip_time ? ` ${b.trip_time}` : ""}</span>
                   )}
-                  <span className="flex items-center gap-1"><MapPin size={9}/>{b.payment_method}</span>
+                  {b.passengers && <span>{b.passengers} pax</span>}
+                  {b.payment_method && <span className="flex items-center gap-1"><MapPin size={9}/>{b.payment_method}</span>}
                 </div>
               </div>
             );

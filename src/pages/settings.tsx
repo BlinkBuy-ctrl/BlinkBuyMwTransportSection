@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Download, BookOpen, X, ChevronRight, Shield, Moon, Sun, Trash2, AlertTriangle } from "lucide-react";
+import {
+  Download, BookOpen, X, ChevronRight, Shield, Trash2,
+  AlertTriangle, User, CheckCircle2, Pencil
+} from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { getLanguage, setLanguage } from "@/lib/auth";
-import { getIdentitySync, clearIdentity } from "@/lib/identity";
+import { getIdentitySync, clearIdentity, getDisplayName, setDisplayName } from "@/lib/identity";
 import { usePWA } from "@/hooks/usePWA";
 
 const TUTORIAL_STEPS = [
@@ -15,36 +18,54 @@ const TUTORIAL_STEPS = [
 ];
 
 export default function SettingsPage() {
-  const [, navigate] = useLocation();
+  const [, navigate]   = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { isInstallable, install } = usePWA();
   const [lang, setLang] = useState<"en"|"ny">(getLanguage());
-  const [showTutorial, setShowTutorial] = useState(false);
-  const [tutorialStep, setTutorialStep] = useState(0);
+  const [showTutorial, setShowTutorial]       = useState(false);
+  const [tutorialStep, setTutorialStep]       = useState(0);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const identity = getIdentitySync();
 
+  // Profile name
+  const [displayName, setDisplayNameState] = useState<string>(getDisplayName());
+  const [editingName, setEditingName]       = useState(false);
+  const [nameInput, setNameInput]           = useState("");
+  const [nameSaved, setNameSaved]           = useState(false);
+  const [nameError, setNameError]           = useState("");
+
+  const startEdit = () => {
+    setNameInput(displayName);
+    setNameError("");
+    setNameSaved(false);
+    setEditingName(true);
+  };
+
+  const saveName = () => {
+    const t = nameInput.trim();
+    if (!t) { setNameError("Name cannot be empty."); return; }
+    if (t.length > 40) { setNameError("Max 40 characters."); return; }
+    if (!setDisplayName(t)) { setNameError("Could not save. Try again."); return; }
+    setDisplayNameState(t);
+    setEditingName(false);
+    setNameSaved(true);
+    setTimeout(() => setNameSaved(false), 2500);
+  };
+
   const handleLangChange = (l: "en"|"ny") => {
-    if (l === "ny") {
-      alert("Chichewa translation coming soon!");
-      return;
-    }
-    setLang(l);
-    setLanguage(l);
+    if (l === "ny") { alert("Chichewa translation coming soon!"); return; }
+    setLang(l); setLanguage(l);
   };
 
   const handleInstall = async () => {
-    if (isInstallable) {
-      await install();
-    } else {
-      alert("To install: open browser menu → 'Add to Home Screen'");
-    }
+    if (isInstallable) await install();
+    else alert("To install: open browser menu → 'Add to Home Screen'");
   };
 
   const handleResetIdentity = () => {
     clearIdentity();
     setShowResetConfirm(false);
-    alert("Device identity cleared. Your listings are no longer manageable from this device. The listings still exist but cannot be edited or deleted.");
+    alert("Device identity cleared. Your listings are no longer manageable from this device.");
     window.location.reload();
   };
 
@@ -92,16 +113,65 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* Identity info */}
+      {/* ── Profile Name ── */}
+      <div className="bg-card border border-card-border rounded-xl p-5 mb-4">
+        <h2 className="text-sm font-bold mb-3 flex items-center gap-2">
+          <User size={15} className="text-teal-500"/> Profile
+        </h2>
+        <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+          Your public name appears on bookings and listings. Your device ID never changes — only this name can be edited.
+        </p>
+        <div className="bg-muted rounded-xl px-4 py-3 mb-3 flex items-center justify-between gap-3">
+          <div>
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Display Name</div>
+            <div className="text-sm font-black">{displayName}</div>
+          </div>
+          <button onClick={startEdit}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-teal-500 text-teal-600 dark:text-teal-400 text-xs font-semibold hover:bg-teal-50 dark:hover:bg-teal-900/10 transition-all active:scale-95">
+            <Pencil size={12}/> Edit
+          </button>
+        </div>
+        {editingName && (
+          <div className="space-y-2 animate-in fade-in duration-150">
+            <input
+              value={nameInput}
+              onChange={e => { setNameInput(e.target.value); setNameError(""); }}
+              onKeyDown={e => { if (e.key === "Enter") saveName(); if (e.key === "Escape") setEditingName(false); }}
+              placeholder="Enter your display name"
+              maxLength={40}
+              autoFocus
+              className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-teal-500 transition-all"
+            />
+            {nameError && <p className="text-xs text-red-500">{nameError}</p>}
+            <div className="flex gap-2">
+              <button onClick={() => setEditingName(false)}
+                className="flex-1 py-2 border border-border rounded-xl text-xs font-bold hover:bg-muted transition-all">
+                Cancel
+              </button>
+              <button onClick={saveName}
+                className="flex-1 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-black transition-all active:scale-95">
+                Save Name
+              </button>
+            </div>
+          </div>
+        )}
+        {nameSaved && !editingName && (
+          <div className="flex items-center gap-2 text-xs text-green-600 dark:text-green-400 font-semibold animate-in fade-in duration-150">
+            <CheckCircle2 size={13}/> Name saved!
+          </div>
+        )}
+      </div>
+
+      {/* ── Anonymous Identity ── */}
       <div className="bg-card border border-card-border rounded-xl p-5 mb-4">
         <h2 className="text-sm font-bold mb-3 flex items-center gap-2">
           <Shield size={15} className="text-green-500"/> Anonymous Identity
         </h2>
         <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
-          No account is needed. Your listings are automatically tied to this device using a secure anonymous token stored in your browser.
+          No account needed. Your listings are tied to this device via a secure anonymous token.
         </p>
-        <div className="bg-muted rounded-lg px-3 py-2 mb-3">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Device Token</div>
+        <div className="bg-muted rounded-lg px-3 py-2 mb-2">
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Device Token (unique ID)</div>
           <div className="text-xs font-mono text-foreground break-all">{identity?.token ?? "Not yet generated"}</div>
         </div>
         <div className="text-[10px] text-muted-foreground">
@@ -109,11 +179,9 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* App Settings */}
+      {/* ── App Settings ── */}
       <div className="bg-card border border-card-border rounded-xl p-5 mb-4">
         <h2 className="text-sm font-bold mb-4">App Settings</h2>
-
-        {/* Dark mode */}
         <div className="flex items-center justify-between mb-4">
           <div>
             <div className="text-sm font-medium">Dark Mode</div>
@@ -124,8 +192,6 @@ export default function SettingsPage() {
             <div className={`w-5 h-5 rounded-full bg-white shadow absolute top-0.5 transition-all ${theme === "dark" ? "left-6" : "left-0.5"}`}/>
           </button>
         </div>
-
-        {/* Language */}
         <div className="flex items-center justify-between mb-4">
           <div>
             <div className="text-sm font-medium">Language</div>
@@ -142,24 +208,16 @@ export default function SettingsPage() {
             </button>
           </div>
         </div>
-
-        {/* Tutorial */}
         <div className="flex items-center justify-between mb-4 pt-3 border-t border-border">
           <div>
             <div className="text-sm font-medium">How to Use TransportMW</div>
             <div className="text-xs text-muted-foreground">Step-by-step guide</div>
           </div>
-          <button onClick={() => {
-              localStorage.removeItem("tmw_onboarding_done");
-              navigate("/");
-              setTimeout(() => window.dispatchEvent(new Event("tmw:restart-tutorial")), 350);
-            }}
+          <button onClick={() => { localStorage.removeItem("tmw_onboarding_done"); navigate("/"); setTimeout(() => window.dispatchEvent(new Event("tmw:restart-tutorial")), 350); }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-teal-500 text-teal-600 text-xs font-semibold hover:bg-teal-50 dark:hover:bg-teal-900/10 transition-all">
             <BookOpen size={13}/> Tutorial
           </button>
         </div>
-
-        {/* Install */}
         <div className="flex items-center justify-between pt-3 border-t border-border">
           <div>
             <div className="text-sm font-medium">Install App</div>
@@ -172,13 +230,13 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Danger zone */}
+      {/* ── Danger Zone ── */}
       <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-xl p-5">
         <h2 className="text-sm font-bold text-red-700 dark:text-red-400 mb-3 flex items-center gap-2">
           <AlertTriangle size={14}/> Danger Zone
         </h2>
         <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-          Clearing your device identity will unlink you from all your listings. The listings will remain live but you won't be able to edit or delete them.
+          Clearing your device identity unlinks you from all listings. Listings remain live but can no longer be edited or deleted.
         </p>
         {!showResetConfirm ? (
           <button onClick={() => setShowResetConfirm(true)}
@@ -190,13 +248,9 @@ export default function SettingsPage() {
             <p className="text-xs font-bold text-red-700 dark:text-red-400">Are you sure? This cannot be undone.</p>
             <div className="flex gap-2">
               <button onClick={() => setShowResetConfirm(false)}
-                className="flex-1 py-2 border border-border rounded-xl text-xs font-bold hover:bg-muted transition-all">
-                Cancel
-              </button>
+                className="flex-1 py-2 border border-border rounded-xl text-xs font-bold hover:bg-muted transition-all">Cancel</button>
               <button onClick={handleResetIdentity}
-                className="flex-1 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-black transition-all active:scale-95">
-                Yes, Clear Identity
-              </button>
+                className="flex-1 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-black transition-all active:scale-95">Yes, Clear Identity</button>
             </div>
           </div>
         )}
